@@ -6,6 +6,7 @@ using System.Text;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using techmeet_api.Data;
+using Microsoft.AspNetCore.Authorization;
 
 namespace techmeet_api.Controllers
 {
@@ -24,6 +25,21 @@ namespace techmeet_api.Controllers
             _signInManager = signInManager;
             _configuration = configuration;
             _context = context;
+        }
+
+        [HttpPost("verify")]
+        [Authorize]
+        public IActionResult VerifyToken()
+        {
+            var user = HttpContext.User;
+            if (user.Identity != null && user.Identity.IsAuthenticated)
+            {
+                return Ok(new { valid = true });
+            }
+            else
+            {
+                return Unauthorized(new { valid = false });
+            }
         }
 
         [HttpPost("register")]
@@ -56,7 +72,12 @@ namespace techmeet_api.Controllers
 
             if (result.Succeeded)
             {
-                return Ok(new { Token = GenerateJwtToken(model.Email) });
+                var user = await _userManager.FindByEmailAsync(model.Email);
+                if (user == null)
+                {
+                    return BadRequest("Invalid login attempt");
+                }
+                return Ok(new { Token = GenerateJwtToken(model.Email, user) });
             }
 
             return BadRequest("Invalid login attempt");
@@ -88,14 +109,12 @@ namespace techmeet_api.Controllers
             return Ok();
         }
 
-
-
         private bool IsJwtRevoked(string jwt)
         {
             return _context.RevokedTokens.Any(rt => rt.Token == jwt);
         }
 
-        private string GenerateJwtToken(string email, User user = null)
+        private async Task<string> GenerateJwtToken(string email, User user)
         {
             var userClaims = new List<Claim>{
                 new Claim(ClaimTypes.Name, email)
@@ -104,6 +123,12 @@ namespace techmeet_api.Controllers
             if (user != null)
             {
                 userClaims.Add(new Claim(ClaimTypes.NameIdentifier, user.Id));
+            }
+            var roles = await _userManager.GetRolesAsync(user);
+
+            foreach (var role in roles)
+            {
+                userClaims.Add(new Claim(ClaimTypes.Role, role));
             }
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
