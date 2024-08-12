@@ -1,0 +1,8 @@
+# ASP.NET Core environment settings
+.env
+appsettings.Development.json
+
+# Build Folders
+.DS_Store
+bin/
+obj/
