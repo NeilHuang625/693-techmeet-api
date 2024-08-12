@@ -9,6 +9,17 @@ var builder = WebApplication.CreateBuilder(args);
 // Load .env file
 Env.Load();
 
+// Add CORS policy
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.SetIsOriginAllowed(origin => new Uri(origin).Host == "localhost")
+            .AllowAnyHeader()
+            .AllowAnyOrigin();
+    });
+});
+
 // Set up the database connection
 var connectionString = Environment.GetEnvironmentVariable("DefaultConnection");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
