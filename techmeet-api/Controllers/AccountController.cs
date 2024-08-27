@@ -27,30 +27,28 @@ namespace techmeet_api.Controllers
             _context = context;
         }
 
-        [HttpPost("verify")]
         [Authorize]
-        public IActionResult VerifyToken()
-        {
-            var user = HttpContext.User;
-            if (user.Identity != null && user.Identity.IsAuthenticated)
+        [HttpPost("userinfo")]
+        public async Task<IActionResult> UserInfo(){
+            string jwt = GetJwtFromRequest();
+
+            var handler = new JwtSecurityTokenHandler();
+            var token = handler.ReadJwtToken(jwt);
+            var email = token.Claims.First(claim => claim.Type == ClaimTypes.Name).Value;
+            var user = await _userManager.FindByEmailAsync(email);
+            IList<string> roles = null;
+            if (user == null)
             {
-                return Ok(new { valid = true });
+                return BadRequest("Invalid user");
+            }else{
+                roles = await _userManager.GetRolesAsync(user);
             }
-            else
-            {
-                return Unauthorized(new { valid = false });
-            }
+            return Ok(new {User = new{Id = user.Id, Email = user.Email, Nickname = user.Nickname, Roles = roles}});
         }
 
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterModel model)
         {
-            // Convert the model to a JSON string
-            var modelJson = System.Text.Json.JsonSerializer.Serialize(model);
-
-            // Print the JSON string
-            Console.WriteLine(modelJson);
-            
             // Check if the email has been used
             var userExists = await _userManager.FindByEmailAsync(model.Email);
             if(userExists != null){
@@ -71,7 +69,8 @@ namespace techmeet_api.Controllers
                 // Add user to the "user" role
                 await _userManager.AddToRoleAsync(user, "user");
                 await _signInManager.SignInAsync(user, false);
-                return Ok(new { Token = GenerateJwtToken(model.Email, user) });
+
+                return Ok(new {User = new{Id = user.Id, Email = user.Email, Nickname = user.Nickname, Roles="user"}, Token = GenerateJwtToken(model.Email, user) });
             }
 
             return BadRequest("Invalid registration");
@@ -85,16 +84,19 @@ namespace techmeet_api.Controllers
             if (result.Succeeded)
             {
                 var user = await _userManager.FindByEmailAsync(model.Email);
+                IList<string> roles = null;
                 if (user == null)
                 {
                     return BadRequest("Invalid login attempt");
+                }else{
+                    roles = await _userManager.GetRolesAsync(user);
                 }
-                return Ok(new { Token = GenerateJwtToken(model.Email, user) });
+                return Ok(new {User = new{Id = user.Id, Email = user.Email, Nickname = user.Nickname, Roles = roles}, Token = GenerateJwtToken(model.Email, user) });
             }
 
             return BadRequest("Invalid login attempt");
         }
-
+ 
         private string GetJwtFromRequest()
         {
             var jwt = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
@@ -105,15 +107,6 @@ namespace techmeet_api.Controllers
         [HttpPost("logout")]
         public async Task<IActionResult> Logout()
         {
-            // Debug: Check if the user is authenticated
-            if (User.Identity.IsAuthenticated)
-            {
-                Console.WriteLine($"User is authenticated: {User.Identity.Name}");
-            }
-            else
-            {
-                Console.WriteLine("User is not authenticated");
-            }
             // Get the JWT from the request
             string jwt = GetJwtFromRequest();
 
@@ -152,8 +145,13 @@ namespace techmeet_api.Controllers
             {
                 userClaims.Add(new Claim(ClaimTypes.Role, role));
             }
+            var jwtKey = _configuration["Jwt_Key"];
+            if(string.IsNullOrEmpty(jwtKey))
+            {
+                throw new Exception("JWT configuration is missing");
+            }
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt_Key"]));
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             var token = new JwtSecurityToken(_configuration["Jwt_Issuer"],
