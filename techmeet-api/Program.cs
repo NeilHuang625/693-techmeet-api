@@ -3,25 +3,31 @@ using Microsoft.EntityFrameworkCore;
 using techmeet_api.Data;
 using techmeet_api.Models;
 using DotNetEnv;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Load .env file
 Env.Load();
 
+// Add environment variables as configuration sources
+builder.Configuration.AddEnvironmentVariables();
+
 // Add CORS policy
 builder.Services.AddCors(options =>
 {
-    options.AddDefaultPolicy(policy =>
+    options.AddPolicy("AllowReactApp",policy =>
     {
-        policy.SetIsOriginAllowed(origin => new Uri(origin).Host == "localhost")
+        policy.WithOrigins("http://localhost:5174")
             .AllowAnyHeader()
-            .AllowAnyOrigin();
+            .AllowAnyMethod();
     });
 });
 
 // Set up the database connection
-var connectionString = Environment.GetEnvironmentVariable("DefaultConnection");
+var connectionString = builder.Configuration["ConnectionString"];
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
     options.UseSqlServer(connectionString);
@@ -31,6 +37,28 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddDefaultIdentity<User>()
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>();
+
+// Add JWT authentication
+var jwtKey = builder.Configuration["Jwt_Key"];
+if(string.IsNullOrEmpty(jwtKey))
+{
+    throw new Exception("JWT configuration is missing");
+}
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = builder.Configuration["Jwt_Issuer"],
+            ValidAudience = builder.Configuration["Jwt_Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
+        };
+    });
 
 
 builder.Services.AddControllers();
@@ -56,7 +84,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+app.UseCors("AllowReactApp");
+// app.UseHttpsRedirection();
 
 app.UseAuthentication();
 app.UseAuthorization();
@@ -86,8 +115,8 @@ async Task EnsureRolesAsync(RoleManager<IdentityRole> roleManager)
 // Make sure the default admin user exitst and if not, create it
 async Task EnsureDefaultAdminAsync(UserManager<User> userManager)
 {
-    var adminEmail = Environment.GetEnvironmentVariable("AdminEmail");
-    var adminPassword = Environment.GetEnvironmentVariable("AdminPassword");
+    var adminEmail = builder.Configuration["AdminEmail"];
+    var adminPassword = builder.Configuration["AdminPassword"];
     var adminUser = await userManager.FindByEmailAsync(adminEmail);
     if (adminUser == null)
     {

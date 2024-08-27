@@ -45,6 +45,18 @@ namespace techmeet_api.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterModel model)
         {
+            // Convert the model to a JSON string
+            var modelJson = System.Text.Json.JsonSerializer.Serialize(model);
+
+            // Print the JSON string
+            Console.WriteLine(modelJson);
+            
+            // Check if the email has been used
+            var userExists = await _userManager.FindByEmailAsync(model.Email);
+            if(userExists != null){
+                return BadRequest("Email already in use");
+            }
+
             var user = new User
             {
                 UserName = model.Email,
@@ -89,9 +101,19 @@ namespace techmeet_api.Controllers
             return jwt;
         }
 
+        [Authorize]
         [HttpPost("logout")]
         public async Task<IActionResult> Logout()
         {
+            // Debug: Check if the user is authenticated
+            if (User.Identity.IsAuthenticated)
+            {
+                Console.WriteLine($"User is authenticated: {User.Identity.Name}");
+            }
+            else
+            {
+                Console.WriteLine("User is not authenticated");
+            }
             // Get the JWT from the request
             string jwt = GetJwtFromRequest();
 
@@ -131,11 +153,11 @@ namespace techmeet_api.Controllers
                 userClaims.Add(new Claim(ClaimTypes.Role, role));
             }
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt_Key"]));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-            var token = new JwtSecurityToken(_configuration["Jwt:Issuer"],
-                _configuration["Jwt:Issuer"],
+            var token = new JwtSecurityToken(_configuration["Jwt_Issuer"],
+                _configuration["Jwt_Issuer"],
                 userClaims,
                 expires: DateTime.Now.AddMinutes(30),
                 signingCredentials: creds);
