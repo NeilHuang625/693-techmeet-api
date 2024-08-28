@@ -28,8 +28,9 @@ namespace techmeet_api.Controllers
         }
 
         [Authorize]
-        [HttpPost("userinfo")]
-        public async Task<IActionResult> UserInfo(){
+        [HttpPost("user-info")]
+        public async Task<IActionResult> UserInfo()
+        {
             string jwt = GetJwtFromRequest();
 
             var handler = new JwtSecurityTokenHandler();
@@ -40,10 +41,12 @@ namespace techmeet_api.Controllers
             if (user == null)
             {
                 return BadRequest("Invalid user");
-            }else{
+            }
+            else
+            {
                 roles = await _userManager.GetRolesAsync(user);
             }
-            return Ok(new {User = new{Id = user.Id, Email = user.Email, Nickname = user.Nickname, Roles = roles}});
+            return Ok(new { User = new { Id = user.Id, Email = user.Email, Nickname = user.Nickname, Roles = roles } });
         }
 
         [HttpPost("register")]
@@ -51,7 +54,8 @@ namespace techmeet_api.Controllers
         {
             // Check if the email has been used
             var userExists = await _userManager.FindByEmailAsync(model.Email);
-            if(userExists != null){
+            if (userExists != null)
+            {
                 return BadRequest("Email already in use");
             }
 
@@ -70,10 +74,15 @@ namespace techmeet_api.Controllers
                 await _userManager.AddToRoleAsync(user, "user");
                 await _signInManager.SignInAsync(user, false);
 
-                return Ok(new {User = new{Id = user.Id, Email = user.Email, Nickname = user.Nickname, Roles="user"}, Token = GenerateJwtToken(model.Email, user) });
+                return Ok(new { User = new { Id = user.Id, Email = user.Email, Nickname = user.Nickname, Roles = "user" }, Token = GenerateJwtToken(model.Email, user) });
             }
 
             return BadRequest("Invalid registration");
+        }
+
+        private bool IsJwtRevoked(string jwt)
+        {
+            return _context.RevokedTokens.Any(rt => rt.Token == jwt);
         }
 
         [HttpPost("login")]
@@ -88,15 +97,17 @@ namespace techmeet_api.Controllers
                 if (user == null)
                 {
                     return BadRequest("Invalid login attempt");
-                }else{
+                }
+                else
+                {
                     roles = await _userManager.GetRolesAsync(user);
                 }
-                return Ok(new {User = new{Id = user.Id, Email = user.Email, Nickname = user.Nickname, Roles = roles}, Token = GenerateJwtToken(model.Email, user) });
+                return Ok(new { User = new { Id = user.Id, Email = user.Email, Nickname = user.Nickname, Roles = roles }, Token = GenerateJwtToken(model.Email, user) });
             }
 
             return BadRequest("Invalid login attempt");
         }
- 
+
         private string GetJwtFromRequest()
         {
             var jwt = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
@@ -124,11 +135,6 @@ namespace techmeet_api.Controllers
             return Ok();
         }
 
-        private bool IsJwtRevoked(string jwt)
-        {
-            return _context.RevokedTokens.Any(rt => rt.Token == jwt);
-        }
-
         private async Task<string> GenerateJwtToken(string email, User user)
         {
             var userClaims = new List<Claim>{
@@ -146,7 +152,7 @@ namespace techmeet_api.Controllers
                 userClaims.Add(new Claim(ClaimTypes.Role, role));
             }
             var jwtKey = _configuration["Jwt_Key"];
-            if(string.IsNullOrEmpty(jwtKey))
+            if (string.IsNullOrEmpty(jwtKey))
             {
                 throw new Exception("JWT configuration is missing");
             }
@@ -157,7 +163,7 @@ namespace techmeet_api.Controllers
             var token = new JwtSecurityToken(_configuration["Jwt_Issuer"],
                 _configuration["Jwt_Issuer"],
                 userClaims,
-                expires: DateTime.Now.AddMinutes(30),
+                expires: DateTime.Now.AddMinutes(50),
                 signingCredentials: creds);
 
             return new JwtSecurityTokenHandler().WriteToken(token);

@@ -6,6 +6,8 @@ using DotNetEnv;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using techmeet_api.Repositories;
+using techmeet_api.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,7 +20,7 @@ builder.Configuration.AddEnvironmentVariables();
 // Add CORS policy
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowReactApp",policy =>
+    options.AddPolicy("AllowReactApp", policy =>
     {
         policy.WithOrigins("http://localhost:5174")
             .AllowAnyHeader()
@@ -40,7 +42,7 @@ builder.Services.AddDefaultIdentity<User>()
 
 // Add JWT authentication
 var jwtKey = builder.Configuration["Jwt_Key"];
-if(string.IsNullOrEmpty(jwtKey))
+if (string.IsNullOrEmpty(jwtKey))
 {
     throw new Exception("JWT configuration is missing");
 }
@@ -60,10 +62,12 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+// Register JWT blacklist service
+builder.Services.AddScoped<IJwtBlacklistService, JwtBlacklistService>();
 
 var app = builder.Build();
 
@@ -86,6 +90,9 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors("AllowReactApp");
 // app.UseHttpsRedirection();
+
+// Add the JWT blacklist middleware
+app.UseMiddleware<JwtBlacklistMiddleware>();
 
 app.UseAuthentication();
 app.UseAuthorization();
