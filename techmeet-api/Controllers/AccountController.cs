@@ -32,7 +32,6 @@ namespace techmeet_api.Controllers
         public async Task<IActionResult> UserInfo()
         {
             string jwt = GetJwtFromRequest();
-
             var handler = new JwtSecurityTokenHandler();
             var token = handler.ReadJwtToken(jwt);
             var email = token.Claims.First(claim => claim.Type == ClaimTypes.Name).Value;
@@ -144,6 +143,8 @@ namespace techmeet_api.Controllers
             if (user != null)
             {
                 userClaims.Add(new Claim(ClaimTypes.NameIdentifier, user.Id));
+                // Add the user's nickname to the claims
+                userClaims.Add(new Claim(ClaimTypes.GivenName, user.Nickname ?? string.Empty));
             }
             var roles = await _userManager.GetRolesAsync(user);
 
@@ -161,9 +162,9 @@ namespace techmeet_api.Controllers
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             var token = new JwtSecurityToken(_configuration["Jwt_Issuer"],
-                _configuration["Jwt_Issuer"],
+                _configuration["Jwt_Audience"],
                 userClaims,
-                expires: DateTime.Now.AddMinutes(50),
+                expires: DateTime.Now.AddMinutes(6),
                 signingCredentials: creds);
 
             return new JwtSecurityTokenHandler().WriteToken(token);
