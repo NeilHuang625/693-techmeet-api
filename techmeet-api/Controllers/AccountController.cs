@@ -27,27 +27,6 @@ namespace techmeet_api.Controllers
             _context = context;
         }
 
-        [Authorize]
-        [HttpPost("user-info")]
-        public async Task<IActionResult> UserInfo()
-        {
-            string jwt = GetJwtFromRequest();
-            var handler = new JwtSecurityTokenHandler();
-            var token = handler.ReadJwtToken(jwt);
-            var email = token.Claims.First(claim => claim.Type == ClaimTypes.Name).Value;
-            var user = await _userManager.FindByEmailAsync(email);
-            IList<string> roles = null;
-            if (user == null)
-            {
-                return BadRequest("Invalid user");
-            }
-            else
-            {
-                roles = await _userManager.GetRolesAsync(user);
-            }
-            return Ok(new { User = new { Id = user.Id, Email = user.Email, Nickname = user.Nickname, Roles = roles } });
-        }
-
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterModel model)
         {
@@ -133,6 +112,38 @@ namespace techmeet_api.Controllers
 
             return Ok();
         }
+
+        [Authorize]
+        [HttpPost("refresh-token")]
+        public async Task<IActionResult> RefreshToken()
+        {
+            string jwt = GetJwtFromRequest();
+            if (IsJwtRevoked(jwt))
+            {
+                return BadRequest("Invalid Token");
+            }
+            var handler = new JwtSecurityTokenHandler();
+            var token = handler.ReadJwtToken(jwt);
+            var email = token.Claims.First(claim => claim.Type == ClaimTypes.Name).Value;
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null)
+            {
+                return BadRequest("Invalid user");
+            }
+
+            // Revoke the old jwt token
+            var revokedToken = new RevokedToken
+            {
+                Token = jwt,
+                RevokedAt = DateTime.UtcNow
+            };
+            _context.RevokedTokens.Add(revokedToken);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { Token = GenerateJwtToken(email, user) });
+
+        }
+
 
         private async Task<string> GenerateJwtToken(string email, User user)
         {
