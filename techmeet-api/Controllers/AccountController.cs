@@ -141,7 +141,41 @@ namespace techmeet_api.Controllers
             await _context.SaveChangesAsync();
 
             return Ok(new { Token = GenerateJwtToken(email, user) });
+        }
 
+        [Authorize(Roles = "user")]
+        [HttpPost("upgrade-to-vip")]
+        public async Task<IActionResult> UpgradeToVip()
+        {
+            var jwt = GetJwtFromRequest();
+            if (IsJwtRevoked(jwt))
+            {
+                return BadRequest("Invalid Token");
+            }
+            var handler = new JwtSecurityTokenHandler();
+            var token = handler.ReadJwtToken(jwt);
+            var email = token.Claims.First(claim => claim.Type == ClaimTypes.Name).Value;
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null)
+            {
+                return BadRequest("Invalid user");
+            }
+            await _userManager.RemoveFromRoleAsync(user, "user");
+            await _userManager.AddToRoleAsync(user, "vip");
+
+            // Update the VIPExpirationDate field
+            user.VIPExpirationDate = DateTime.UtcNow.AddYears(1);
+            await _userManager.UpdateAsync(user);
+
+            var revokedToken = new RevokedToken
+            {
+                Token = jwt,
+                RevokedAt = DateTime.UtcNow
+            };
+            _context.RevokedTokens.Add(revokedToken);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { Token = GenerateJwtToken(email, user) });
         }
 
 
@@ -175,7 +209,7 @@ namespace techmeet_api.Controllers
             var token = new JwtSecurityToken(_configuration["Jwt_Issuer"],
                 _configuration["Jwt_Audience"],
                 userClaims,
-                expires: DateTime.Now.AddMinutes(6),
+                expires: DateTime.UtcNow.AddHours(6), // Token expiration time
                 signingCredentials: creds);
 
             return new JwtSecurityTokenHandler().WriteToken(token);
