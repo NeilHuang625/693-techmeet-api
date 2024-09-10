@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using techmeet_api.Data;
 
@@ -11,9 +12,11 @@ using techmeet_api.Data;
 namespace techmeet_api.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240909103145_addCategory")]
+    partial class addCategory
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -159,23 +162,6 @@ namespace techmeet_api.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("techmeet_api.Models.Category", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Category");
-                });
-
             modelBuilder.Entity("techmeet_api.Models.Event", b =>
                 {
                     b.Property<int>("Id")
@@ -184,8 +170,9 @@ namespace techmeet_api.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("CategoryId")
-                        .HasColumnType("int");
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int?>("CurrentAttendees")
                         .HasColumnType("int");
@@ -223,8 +210,6 @@ namespace techmeet_api.Migrations
                         .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("CategoryId");
 
                     b.HasIndex("UserId");
 
@@ -375,26 +360,13 @@ namespace techmeet_api.Migrations
 
             modelBuilder.Entity("techmeet_api.Models.Event", b =>
                 {
-                    b.HasOne("techmeet_api.Models.Category", "Category")
-                        .WithMany("Events")
-                        .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("techmeet_api.Models.User", "User")
                         .WithMany("Events")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Category");
-
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("techmeet_api.Models.Category", b =>
-                {
-                    b.Navigation("Events");
                 });
 
             modelBuilder.Entity("techmeet_api.Models.User", b =>

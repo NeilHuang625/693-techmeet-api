@@ -1,5 +1,3 @@
-using Microsoft.AspNetCore.Identity;
-
 namespace techmeet_api.Models
 {
     public class Event
@@ -15,16 +13,11 @@ namespace techmeet_api.Models
         public int? CurrentAttendees { get; set; }
         public bool Promoted { get; set; }
         public string UserId { get; set; }
+        public int CategoryId { get; set; }
 
         // add a navigation property to the User class
         public User User { get; set; }
-
-
-        // Set Promoted to false by default
-        public Event()
-        {
-            Promoted = false;
-        }
+        public Category Category { get; set; }
 
     }
 }
