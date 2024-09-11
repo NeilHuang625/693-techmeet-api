@@ -209,7 +209,7 @@ namespace techmeet_api.Controllers
             var token = new JwtSecurityToken(_configuration["Jwt_Issuer"],
                 _configuration["Jwt_Audience"],
                 userClaims,
-                expires: DateTime.UtcNow.AddHours(6), // Token expiration time
+                expires: DateTime.UtcNow.AddHours(6), // Token expires in 6 hours
                 signingCredentials: creds);
 
             return new JwtSecurityTokenHandler().WriteToken(token);
