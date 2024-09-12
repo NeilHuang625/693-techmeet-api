@@ -4,10 +4,10 @@ using techmeet_api.Data;
 using techmeet_api.Models;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace techmeet_api.Controllers
 {
-    [Authorize(Roles = "vip,admin")]
     [ApiController]
     [Route("[controller]")]
     public class EventController : ControllerBase
@@ -53,13 +53,14 @@ namespace techmeet_api.Controllers
                 CategoryId = model.CategoryId,
                 CurrentAttendees = 0
             };
-
+            // Create a blob service client to interact with the Azure blob storage
             var blobServiceClient = new BlobServiceClient(_configuration["BLOB_STORAGE_CONNECTION_STRING"]);
             var containerClient = blobServiceClient.GetBlobContainerClient("uploads"); // Create a container called "uploads"
             await containerClient.CreateIfNotExistsAsync(); // Create the container if it doesn't exist
-
+            // Generate a unique file name for the image
             var uniqueFileName = Guid.NewGuid().ToString() + "_" + model.ImageFile.FileName;
-            var blobClient = containerClient.GetBlobClient(uniqueFileName); // Create a blob client for the image file
+            // Create a blob client for the image file
+            var blobClient = containerClient.GetBlobClient(uniqueFileName);
 
             // Upload the image to the Azure blob storage
             using (var stream = model.ImageFile.OpenReadStream())
@@ -73,6 +74,13 @@ namespace techmeet_api.Controllers
             await _context.SaveChangesAsync();
 
             return Ok(newEvent);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetAllEvents()
+        {
+            var events = await _context.Events.ToListAsync();
+            return Ok(events);
         }
 
     }
