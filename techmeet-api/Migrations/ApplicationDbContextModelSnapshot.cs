@@ -159,6 +159,24 @@ namespace techmeet_api.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("techmeet_api.Models.Attendance", b =>
+                {
+                    b.Property<string>("UserId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("EventId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("AttendedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("UserId", "EventId");
+
+                    b.HasIndex("EventId");
+
+                    b.ToTable("Attendances");
+                });
+
             modelBuilder.Entity("techmeet_api.Models.Category", b =>
                 {
                     b.Property<int>("Id")
@@ -362,6 +380,24 @@ namespace techmeet_api.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
+            modelBuilder.Entity("techmeet_api.Models.Waitlist", b =>
+                {
+                    b.Property<string>("UserId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("EventId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("AddedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("UserId", "EventId");
+
+                    b.HasIndex("EventId");
+
+                    b.ToTable("Waitlists");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -413,6 +449,25 @@ namespace techmeet_api.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("techmeet_api.Models.Attendance", b =>
+                {
+                    b.HasOne("techmeet_api.Models.Event", "Event")
+                        .WithMany("Attendances")
+                        .HasForeignKey("EventId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("techmeet_api.Models.User", "User")
+                        .WithMany("Attendances")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Event");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("techmeet_api.Models.Event", b =>
                 {
                     b.HasOne("techmeet_api.Models.Category", "Category")
@@ -424,10 +479,29 @@ namespace techmeet_api.Migrations
                     b.HasOne("techmeet_api.Models.User", "User")
                         .WithMany("Events")
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Category");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("techmeet_api.Models.Waitlist", b =>
+                {
+                    b.HasOne("techmeet_api.Models.Event", "Event")
+                        .WithMany("Waitlists")
+                        .HasForeignKey("EventId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("techmeet_api.Models.User", "User")
+                        .WithMany("Waitlists")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Event");
 
                     b.Navigation("User");
                 });
@@ -437,9 +511,20 @@ namespace techmeet_api.Migrations
                     b.Navigation("Events");
                 });
 
+            modelBuilder.Entity("techmeet_api.Models.Event", b =>
+                {
+                    b.Navigation("Attendances");
+
+                    b.Navigation("Waitlists");
+                });
+
             modelBuilder.Entity("techmeet_api.Models.User", b =>
                 {
+                    b.Navigation("Attendances");
+
                     b.Navigation("Events");
+
+                    b.Navigation("Waitlists");
                 });
 #pragma warning restore 612, 618
         }

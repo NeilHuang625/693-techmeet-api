@@ -9,5 +9,7 @@ namespace techmeet_api.Models
 
         // add a navigation property to the Event class
         public virtual ICollection<Event> Events { get; set; }
+        public virtual ICollection<Attendance> Attendances { get; set; }
+        public virtual ICollection<Waitlist> Waitlists { get; set; }
     }
 }

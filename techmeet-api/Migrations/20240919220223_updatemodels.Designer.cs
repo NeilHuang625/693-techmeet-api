@@ -12,8 +12,8 @@ using techmeet_api.Data;
 namespace techmeet_api.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20240812013023_InitialBuild")]
-    partial class InitialBuild
+    [Migration("20240919220223_updatemodels")]
+    partial class updatemodels
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -162,6 +162,78 @@ namespace techmeet_api.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("techmeet_api.Models.Attendance", b =>
+                {
+                    b.Property<string>("UserId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("EventId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("AttendedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("UserId", "EventId");
+
+                    b.HasIndex("EventId");
+
+                    b.ToTable("Attendances");
+                });
+
+            modelBuilder.Entity("techmeet_api.Models.Category", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Categories");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Name = "Web Development"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Name = "AI & Machine Learning"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Name = "Cloud Computing"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Name = "DevOps"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            Name = "Cybersecurity"
+                        },
+                        new
+                        {
+                            Id = 6,
+                            Name = "Data Science"
+                        },
+                        new
+                        {
+                            Id = 7,
+                            Name = "Mobile Development"
+                        });
+                });
+
             modelBuilder.Entity("techmeet_api.Models.Event", b =>
                 {
                     b.Property<int>("Id")
@@ -169,6 +241,13 @@ namespace techmeet_api.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CategoryId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("City")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int?>("CurrentAttendees")
                         .HasColumnType("int");
@@ -181,7 +260,6 @@ namespace techmeet_api.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("ImageUrl")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Location")
@@ -207,9 +285,31 @@ namespace techmeet_api.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CategoryId");
+
                     b.HasIndex("UserId");
 
                     b.ToTable("Events");
+                });
+
+            modelBuilder.Entity("techmeet_api.Models.RevokedToken", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("RevokedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("RevokedTokens");
                 });
 
             modelBuilder.Entity("techmeet_api.Models.User", b =>
@@ -267,6 +367,9 @@ namespace techmeet_api.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
 
+                    b.Property<DateTime?>("VIPExpirationDate")
+                        .HasColumnType("datetime2");
+
                     b.HasKey("Id");
 
                     b.HasIndex("NormalizedEmail")
@@ -278,6 +381,24 @@ namespace techmeet_api.Migrations
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
 
                     b.ToTable("AspNetUsers", (string)null);
+                });
+
+            modelBuilder.Entity("techmeet_api.Models.Waitlist", b =>
+                {
+                    b.Property<string>("UserId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("EventId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("AddedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("UserId", "EventId");
+
+                    b.HasIndex("EventId");
+
+                    b.ToTable("Waitlists");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -331,20 +452,82 @@ namespace techmeet_api.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("techmeet_api.Models.Event", b =>
+            modelBuilder.Entity("techmeet_api.Models.Attendance", b =>
                 {
-                    b.HasOne("techmeet_api.Models.User", "User")
-                        .WithMany("Events")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                    b.HasOne("techmeet_api.Models.Event", "Event")
+                        .WithMany("Attendances")
+                        .HasForeignKey("EventId")
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
+
+                    b.HasOne("techmeet_api.Models.User", "User")
+                        .WithMany("Attendances")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Event");
 
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("techmeet_api.Models.User", b =>
+            modelBuilder.Entity("techmeet_api.Models.Event", b =>
+                {
+                    b.HasOne("techmeet_api.Models.Category", "Category")
+                        .WithMany("Events")
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("techmeet_api.Models.User", "User")
+                        .WithMany("Events")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Category");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("techmeet_api.Models.Waitlist", b =>
+                {
+                    b.HasOne("techmeet_api.Models.Event", "Event")
+                        .WithMany("Waitlists")
+                        .HasForeignKey("EventId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("techmeet_api.Models.User", "User")
+                        .WithMany("Waitlists")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Event");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("techmeet_api.Models.Category", b =>
                 {
                     b.Navigation("Events");
+                });
+
+            modelBuilder.Entity("techmeet_api.Models.Event", b =>
+                {
+                    b.Navigation("Attendances");
+
+                    b.Navigation("Waitlists");
+                });
+
+            modelBuilder.Entity("techmeet_api.Models.User", b =>
+                {
+                    b.Navigation("Attendances");
+
+                    b.Navigation("Events");
+
+                    b.Navigation("Waitlists");
                 });
 #pragma warning restore 612, 618
         }

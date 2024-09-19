@@ -81,7 +81,25 @@ namespace techmeet_api.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAllEvents()
         {
-            var events = await _context.Events.ToListAsync();
+            var events = await _context.Events.Include(e => e.Category).Include(e => e.User).Select(e => new
+            {
+                e.Id,
+                e.Title,
+                e.Description,
+                e.Location,
+                e.City,
+                e.StartTime,
+                e.EndTime,
+                e.ImageUrl,
+                e.MaxAttendees,
+                e.CurrentAttendees,
+                e.Promoted,
+                e.UserId,
+                e.CategoryId,
+                Category = e.Category.Name,
+                User = e.User.Nickname
+            }).ToListAsync();
+
             return Ok(events);
         }
 

@@ -23,6 +23,8 @@ namespace techmeet_api.Models
         // add a navigation property to the User class
         public User User { get; set; }
         public Category Category { get; set; }
+        public virtual ICollection<Attendance> Attendances { get; set; }
+        public virtual ICollection<Waitlist> Waitlists { get; set; }
 
     }
 }
