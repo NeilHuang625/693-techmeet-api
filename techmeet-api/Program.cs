@@ -36,6 +36,12 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString);
 });
 
+// Configure ReferenceHandler to preserve reference loops
+// builder.Services.AddControllers().AddJsonOptions(options =>
+// {
+//     options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve;
+// });
+
 // Add Identity services
 builder.Services.AddDefaultIdentity<User>()
     .AddRoles<IdentityRole>()

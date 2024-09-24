@@ -5,6 +5,7 @@ using techmeet_api.Models;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace techmeet_api.Controllers
 {
@@ -101,6 +102,50 @@ namespace techmeet_api.Controllers
             }).ToListAsync();
 
             return Ok(events);
+        }
+
+        [Authorize(Roles = "user,vip,admin")]
+        [HttpGet("{UserId}")]
+        public async Task<IActionResult> GetEventsByUser(string UserId)
+        {
+            // Events the user is attending
+            var attendingEvents = await _context.Attendances.Where(a => a.UserId == UserId).Select(a => a.EventId).ToListAsync();
+            // Events the user is on the waitlist for
+            var waitlistedEvents = await _context.Waitlists.Where(w => w.UserId == UserId).Select(w => w.EventId).ToListAsync();
+
+            return Ok(new { attendingEvents, waitlistedEvents });
+        }
+
+        [Authorize(Roles = "user,vip, admin")]
+        [HttpPost("attend/{EventId}")]
+        public async Task<IActionResult> AttendEvent(int EventId)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var user = await _context.Users.FindAsync(userId);
+            var @event = await _context.Events.FindAsync(EventId);
+
+            if (@event == null)
+            {
+                return NotFound("Event not found");
+            }
+
+            if (@event.CurrentAttendees >= @event.MaxAttendees)
+            {
+                return BadRequest("Event is full");
+            }
+
+            var attendance = new Attendance
+            {
+                UserId = userId,
+                EventId = EventId,
+                AttendedAt = DateTime.UtcNow,
+            };
+
+            _context.Attendances.Add(attendance);
+            @event.CurrentAttendees++;
+            await _context.SaveChangesAsync();
+
+            return Ok(new { CurrentAttendees = @event.CurrentAttendees });
         }
 
     }
