@@ -12,8 +12,8 @@ using techmeet_api.Data;
 namespace techmeet_api.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20240919220223_updatemodels")]
-    partial class updatemodels
+    [Migration("20240926132319_updateagain")]
+    partial class updateagain
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

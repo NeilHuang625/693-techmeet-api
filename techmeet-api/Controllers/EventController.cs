@@ -220,5 +220,30 @@ namespace techmeet_api.Controllers
             }
         }
 
+        [Authorize(Roles = "vip,admin")]
+        [HttpDelete("{EventId}")]
+        public async Task<IActionResult> DeleteEvent(int EventId)
+        {
+            var @event = await _context.Events.FindAsync(EventId);
+
+            if (@event == null)
+            {
+                return NotFound("Event Not Found");
+            }
+
+            // Find and delete all related Attendance records
+            var attendances = await _context.Attendances.Where(a => a.EventId == EventId).ToListAsync();
+            _context.Attendances.RemoveRange(attendances);
+
+            // Find and delete all related Waitlist records
+            var waitlists = await _context.Waitlists.Where(w => w.EventId == EventId).ToListAsync();
+            _context.Waitlists.RemoveRange(waitlists);
+
+            _context.Events.Remove(@event);
+            await _context.SaveChangesAsync();
+
+            return Ok();
+        }
+
     }
 }
