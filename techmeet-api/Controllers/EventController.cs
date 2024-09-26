@@ -148,5 +148,77 @@ namespace techmeet_api.Controllers
             return Ok(new { CurrentAttendees = @event.CurrentAttendees });
         }
 
+        [Authorize(Roles = "user, vip, admin")]
+        [HttpDelete("withdraw/{EventId}")]
+        public async Task<IActionResult> WithdrawEvent(int EventId)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var attendance = await _context.Attendances.FirstOrDefaultAsync(a => a.UserId == userId && a.EventId == EventId);
+            var @event = await _context.Events.FindAsync(EventId);
+
+            if (attendance == null)
+            {
+                return NotFound("Attendance not found");
+            }
+
+            _context.Attendances.Remove(attendance);
+            @event.CurrentAttendees--;
+
+            // Find earliest waitlist record if there are users on the waitlist
+            var waitlist = await _context.Waitlists.Where(w => w.EventId == EventId).OrderBy(w => w.AddedAt).FirstOrDefaultAsync();
+            if (waitlist != null)
+            {
+                // Remove the user from the waitlist
+                _context.Waitlists.Remove(waitlist);
+
+                // Add the user to the attendance list
+                var newAttendance = new Attendance
+                {
+                    UserId = waitlist.UserId,
+                    EventId = EventId,
+                    AttendedAt = DateTime.UtcNow
+                };
+                _context.Attendances.Add(newAttendance);
+                @event.CurrentAttendees++;
+            }
+
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new { CurrentAttendees = @event.CurrentAttendees });
+        }
+
+        [Authorize(Roles = "user, vip, admin")]
+        [HttpPost("waitlist/{EventId}")]
+        public async Task<IActionResult> AddToWaitlist(int EventId)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var @event = await _context.Events.FindAsync(EventId);
+
+            if (@event == null)
+            {
+                return NotFound("Event not found");
+            }
+
+            if (@event.CurrentAttendees < @event.MaxAttendees)
+            {
+                return BadRequest("Event is not full");
+            }
+            else
+            {
+                var waitlist = new Waitlist
+                {
+                    UserId = userId,
+                    EventId = EventId,
+                    AddedAt = DateTime.UtcNow
+                };
+
+                _context.Waitlists.Add(waitlist);
+                await _context.SaveChangesAsync();
+
+                return Ok();
+            }
+        }
+
     }
 }
