@@ -245,5 +245,62 @@ namespace techmeet_api.Controllers
             return Ok();
         }
 
+        public class UpdatedEventDTO
+        {
+            public string Title { get; set; }
+            public string Description { get; set; }
+            public string Location { get; set; }
+            public string City { get; set; }
+            public DateTime StartTime { get; set; }
+            public DateTime EndTime { get; set; }
+            public IFormFile? ImageFile { get; set; }
+            public int MaxAttendees { get; set; }
+            public bool Promoted { get; set; }
+            public int CategoryId { get; set; }
+        };
+
+        [Authorize(Roles = "vip, admin")]
+        [HttpPut("{EventId}")]
+        public async Task<IActionResult> UpdateEvent(int EventId, [FromForm] UpdatedEventDTO model)
+        {
+            var @event = await _context.Events.FindAsync(EventId);
+
+            if (@event == null)
+            {
+                return NotFound("Event not found");
+            }
+
+            @event.Title = model.Title;
+            @event.Description = model.Description;
+            @event.Location = model.Location;
+            @event.City = model.City;
+            @event.StartTime = model.StartTime.ToUniversalTime();
+            @event.EndTime = model.EndTime.ToUniversalTime();
+            @event.MaxAttendees = model.MaxAttendees;
+            @event.Promoted = model.Promoted;
+            @event.CategoryId = model.CategoryId;
+
+            if (model.ImageFile != null)
+            {
+                var blobServiceClient = new BlobServiceClient(_configuration["BLOB_STORAGE_CONNECTION_STRING"]);
+                var containerClient = blobServiceClient.GetBlobContainerClient("uploads");
+                await containerClient.CreateIfNotExistsAsync();
+                var uniqueFileName = Guid.NewGuid().ToString() + "_" + model.ImageFile.FileName;
+                var blobClient = containerClient.GetBlobClient(uniqueFileName);
+
+                using (var stream = model.ImageFile.OpenReadStream())
+                {
+                    await blobClient.UploadAsync(stream, overwrite: true);
+                }
+
+                @event.ImageUrl = blobClient.Uri.AbsoluteUri;
+            }
+
+            await _context.SaveChangesAsync();
+
+            return Ok(@event);
+        }
+
+
     }
 }
