@@ -9,7 +9,7 @@ namespace techmeet_api.Models
         public bool IsRead { get; set; }
         public DateTime CreatedAt { get; set; }
         public int? EventId { get; set; }
-        public User User { get; set; }
+        public User? User { get; set; }
         public Event? Event { get; set; }
     }
 }

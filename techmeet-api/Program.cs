@@ -9,6 +9,7 @@ using System.Text;
 using techmeet_api.Repositories;
 using techmeet_api.Middlewares;
 using System.Text.Json;
+using techmeet_api.BackgroundTasks;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -83,6 +84,9 @@ builder.Services.AddAuthentication(options =>
             }
         };
     });
+
+// Background tasks
+builder.Services.AddHostedService<NotificationBackgroundService>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
