@@ -13,6 +13,7 @@ namespace techmeet_api.Data
         public DbSet<Category> Categories { get; set; }
         public DbSet<Attendance> Attendances { get; set; }
         public DbSet<Waitlist> Waitlists { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
         {
             ChangeTracker.LazyLoadingEnabled = true;
@@ -59,6 +60,19 @@ namespace techmeet_api.Data
                 .HasOne(w => w.Event)
                 .WithMany(e => e.Waitlists)
                 .HasForeignKey(w => w.EventId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            // Define relationships between User, Event, and Notification
+            builder.Entity<Notification>()
+                .HasOne(n => n.User)
+                .WithMany(u => u.Notifications)
+                .HasForeignKey(n => n.UserId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<Notification>()
+                .HasOne(n => n.Event)
+                .WithMany(e => e.Notifications)
+                .HasForeignKey(n => n.EventId)
                 .OnDelete(DeleteBehavior.NoAction);
 
             // Seed data for the Category table

@@ -25,6 +25,7 @@ namespace techmeet_api.Models
         public Category Category { get; set; }
         public virtual ICollection<Attendance> Attendances { get; set; }
         public virtual ICollection<Waitlist> Waitlists { get; set; }
+        public virtual ICollection<Notification> Notifications { get; set; }
 
     }
 }
