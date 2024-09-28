@@ -189,6 +189,24 @@ namespace techmeet_api.Controllers
         }
 
         [Authorize(Roles = "user, vip, admin")]
+        [HttpDelete("waitlist/{EventId}")]
+        public async Task<IActionResult> RemoveFromWaitlist(int EventId)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var waitlist = await _context.Waitlists.FirstOrDefaultAsync(w => w.UserId == userId && w.EventId == EventId);
+
+            if (waitlist == null)
+            {
+                return NotFound("Waitlist not found");
+            }
+
+            _context.Waitlists.Remove(waitlist);
+            await _context.SaveChangesAsync();
+
+            return Ok();
+        }
+
+        [Authorize(Roles = "user, vip, admin")]
         [HttpPost("waitlist/{EventId}")]
         public async Task<IActionResult> AddToWaitlist(int EventId)
         {
