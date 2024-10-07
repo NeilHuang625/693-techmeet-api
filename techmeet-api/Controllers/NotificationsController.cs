@@ -27,13 +27,33 @@ namespace techmeet_api.Controller
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var notifications = await _context.Notifications
-                .Where(n => n.UserId == userId)
+                .Where(n => n.UserId == userId && n.IsRead == false)
                 .OrderByDescending(n => n.CreatedAt)
                 .ToListAsync();
 
             return notifications;
         }
-    }
 
+
+        [Authorize(Roles = "user, vip, admin")]
+        [HttpPut("{id}")]
+        public async Task<IActionResult> MarkNotificationAsRead(int id)
+        {
+            var notification = await _context.Notifications
+                .Where(n => n.Id == id)
+                .FirstOrDefaultAsync();
+
+            if (notification == null)
+            {
+                return NotFound();
+            }
+
+            notification.IsRead = true;
+            _context.Notifications.Update(notification);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+    }
 
 }
