@@ -10,6 +10,10 @@ using techmeet_api.Repositories;
 using techmeet_api.Middlewares;
 using System.Text.Json;
 using techmeet_api.BackgroundTasks;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.SignalR;
+using techmeet_api.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,7 +30,8 @@ builder.Services.AddCors(options =>
     {
         policy.WithOrigins("http://localhost:5173")
             .AllowAnyHeader()
-            .AllowAnyMethod();
+            .AllowAnyMethod()
+            .AllowCredentials();
     });
 });
 
@@ -85,6 +90,9 @@ builder.Services.AddAuthentication(options =>
         };
     });
 
+// Add signalR
+builder.Services.AddSignalR();
+
 // Background tasks
 builder.Services.AddHostedService<NotificationBackgroundService>();
 
@@ -122,8 +130,8 @@ app.UseMiddleware<JwtBlacklistMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
 
-
 app.MapControllers();
+app.MapHub<NotificationHub>("/notificationHub");
 
 app.Run();
 

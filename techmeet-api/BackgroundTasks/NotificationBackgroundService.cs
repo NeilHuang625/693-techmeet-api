@@ -9,16 +9,22 @@ namespace techmeet_api.BackgroundTasks
     using Microsoft.Extensions.Hosting;
     using techmeet_api.Data;
     using techmeet_api.Models;
+    using Microsoft.Extensions.Logging;
+    using Microsoft.AspNetCore.SignalR;
+    using techmeet_api.Hubs;
+
 
     public class NotificationBackgroundService : BackgroundService
     {
         private readonly IServiceScopeFactory _serviceScopeFactory;
         private readonly ILogger<NotificationBackgroundService> _logger;
+        private readonly IHubContext<NotificationHub> _hubContext;
 
-        public NotificationBackgroundService(IServiceScopeFactory serviceScopeFactory, ILogger<NotificationBackgroundService> logger)
+        public NotificationBackgroundService(IServiceScopeFactory serviceScopeFactory, ILogger<NotificationBackgroundService> logger, IHubContext<NotificationHub> hubContext)
         {
             _serviceScopeFactory = serviceScopeFactory;
             _logger = logger;
+            _hubContext = hubContext;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -34,6 +40,17 @@ namespace techmeet_api.BackgroundTasks
 
                 await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);
             }
+        }
+
+
+        public class NotificationSendObject
+        {
+            public int Id { get; set; }
+            public string UserId { get; set; }
+            public string Message { get; set; }
+            public string Type { get; set; }
+            public bool IsRead { get; set; }
+            public DateTime CreatedAt { get; set; }
         }
 
         private async Task GenerateNotificationsAsync(ApplicationDbContext context)
@@ -60,6 +77,21 @@ namespace techmeet_api.BackgroundTasks
                         };
 
                         context.Notifications.Add(notification);
+                        await context.SaveChangesAsync();
+
+                        // Reload the notification from the database to get any changes, such as the ID
+                        context.Entry(notification).Reload();
+                        Console.WriteLine($"Notification ID: {notification.Id}");
+
+                        await _hubContext.Clients.User(user.Id).SendAsync("ReceiveNotification", new NotificationSendObject
+                        {
+                            Id = notification.Id,
+                            UserId = notification.UserId,
+                            Message = notification.Message,
+                            Type = notification.Type,
+                            IsRead = notification.IsRead,
+                            CreatedAt = notification.CreatedAt
+                        });
                     }
                 }
 
@@ -77,19 +109,31 @@ namespace techmeet_api.BackgroundTasks
                             {
                                 UserId = user.Id,
                                 EventId = attendance.EventId,
-                                Message = $"Event {attendance.Event.Title} is starting in less than 3 hours!",
+                                Message = $"\"{attendance.Event.Title}\" is starting in 3 hours!",
                                 Type = "event_upcoming",
                                 CreatedAt = DateTime.UtcNow,
                                 IsRead = false
                             };
 
                             context.Notifications.Add(notification);
+                            await context.SaveChangesAsync();
+
+                            // Reload the notification from the database to get any changes, such as the ID
+                            context.Entry(notification).Reload();
+
+                            await _hubContext.Clients.User(user.Id).SendAsync("ReceiveNotification", new NotificationSendObject
+                            {
+                                Id = notification.Id,
+                                UserId = notification.UserId,
+                                Message = notification.Message,
+                                Type = notification.Type,
+                                IsRead = notification.IsRead,
+                                CreatedAt = notification.CreatedAt
+                            });
                         }
                     }
                 }
             }
-
-            await context.SaveChangesAsync();
         }
     }
 }
