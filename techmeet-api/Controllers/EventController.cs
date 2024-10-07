@@ -257,6 +257,9 @@ namespace techmeet_api.Controllers
             var waitlists = await _context.Waitlists.Where(w => w.EventId == EventId).ToListAsync();
             _context.Waitlists.RemoveRange(waitlists);
 
+            var notifications = await _context.Notifications.Where(n => n.EventId == EventId).ToListAsync();
+            _context.Notifications.RemoveRange(notifications);
+
             _context.Events.Remove(@event);
             await _context.SaveChangesAsync();
 
