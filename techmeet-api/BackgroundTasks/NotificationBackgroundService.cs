@@ -42,7 +42,6 @@ namespace techmeet_api.BackgroundTasks
             }
         }
 
-
         public class NotificationSendObject
         {
             public int Id { get; set; }

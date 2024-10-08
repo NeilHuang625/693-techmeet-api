@@ -42,13 +42,14 @@ namespace techmeet_api.Hubs
             }
             else
             {
+                // Save message to DB and send it to user
                 await _messageService.SaveOfflineMessage(Context.UserIdentifier, userId, message);
             }
         }
 
         private bool IsUserConnected(string userId)
         {
-            return _connectedUsers.ContainsKey(userId);
+            return _connectedUsers.ContainsKey(userId); // Check if user is connected to Hub
         }
     }
 }
