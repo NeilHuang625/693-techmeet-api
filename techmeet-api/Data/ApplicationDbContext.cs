@@ -14,6 +14,7 @@ namespace techmeet_api.Data
         public DbSet<Attendance> Attendances { get; set; }
         public DbSet<Waitlist> Waitlists { get; set; }
         public DbSet<Notification> Notifications { get; set; }
+        public DbSet<OfflineMessage> OfflineMessages { get; set; }
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
         {
             ChangeTracker.LazyLoadingEnabled = true;

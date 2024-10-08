@@ -96,6 +96,9 @@ builder.Services.AddSignalR();
 // Background tasks
 builder.Services.AddHostedService<NotificationBackgroundService>();
 
+// Add MessageService
+builder.Services.AddScoped<IMessageService, MessageService>();
+
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
