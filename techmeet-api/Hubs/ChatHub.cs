@@ -4,8 +4,6 @@ namespace techmeet_api.Hubs
     using Microsoft.AspNetCore.Authorization;
     using System.Threading.Tasks;
     using techmeet_api.Repositories;
-    using System.Security.Claims;
-    using Microsoft.AspNetCore.Http;
     using System;
     using System.Collections.Concurrent;
 
@@ -36,9 +34,11 @@ namespace techmeet_api.Hubs
 
         public async Task SendMessageToUser(string userId, string message)
         {
-            await Clients.User(userId).SendAsync("ReceiveMessage", message);
+            var senderId = Context.UserIdentifier;
+            if (senderId == null) return;
             // Save chat records to DB 
-            await _messageService.SaveMessage(Context.UserIdentifier, userId, message);
+            var newMessage = await _messageService.SaveMessage(senderId, userId, message);
+            await Clients.User(userId).SendAsync("ReceiveMessage", newMessage);
         }
     }
 }
