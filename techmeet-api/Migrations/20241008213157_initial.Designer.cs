@@ -12,8 +12,8 @@ using techmeet_api.Data;
 namespace techmeet_api.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20240926132319_updateagain")]
-    partial class updateagain
+    [Migration("20241008213157_initial")]
+    partial class initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -234,6 +234,39 @@ namespace techmeet_api.Migrations
                         });
                 });
 
+            modelBuilder.Entity("techmeet_api.Models.ChatMessage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("ReceiverId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("SenderId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReceiverId");
+
+                    b.ToTable("ChatMessages");
+                });
+
             modelBuilder.Entity("techmeet_api.Models.Event", b =>
                 {
                     b.Property<int>("Id")
@@ -290,6 +323,44 @@ namespace techmeet_api.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("Events");
+                });
+
+            modelBuilder.Entity("techmeet_api.Models.Notification", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("EventId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EventId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Notifications");
                 });
 
             modelBuilder.Entity("techmeet_api.Models.RevokedToken", b =>
@@ -471,6 +542,17 @@ namespace techmeet_api.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("techmeet_api.Models.ChatMessage", b =>
+                {
+                    b.HasOne("techmeet_api.Models.User", "Receiver")
+                        .WithMany("ChatMessages")
+                        .HasForeignKey("ReceiverId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Receiver");
+                });
+
             modelBuilder.Entity("techmeet_api.Models.Event", b =>
                 {
                     b.HasOne("techmeet_api.Models.Category", "Category")
@@ -486,6 +568,24 @@ namespace techmeet_api.Migrations
                         .IsRequired();
 
                     b.Navigation("Category");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("techmeet_api.Models.Notification", b =>
+                {
+                    b.HasOne("techmeet_api.Models.Event", "Event")
+                        .WithMany("Notifications")
+                        .HasForeignKey("EventId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("techmeet_api.Models.User", "User")
+                        .WithMany("Notifications")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Event");
 
                     b.Navigation("User");
                 });
@@ -518,6 +618,8 @@ namespace techmeet_api.Migrations
                 {
                     b.Navigation("Attendances");
 
+                    b.Navigation("Notifications");
+
                     b.Navigation("Waitlists");
                 });
 
@@ -525,7 +627,11 @@ namespace techmeet_api.Migrations
                 {
                     b.Navigation("Attendances");
 
+                    b.Navigation("ChatMessages");
+
                     b.Navigation("Events");
+
+                    b.Navigation("Notifications");
 
                     b.Navigation("Waitlists");
                 });

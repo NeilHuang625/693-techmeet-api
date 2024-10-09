@@ -14,7 +14,7 @@ namespace techmeet_api.Data
         public DbSet<Attendance> Attendances { get; set; }
         public DbSet<Waitlist> Waitlists { get; set; }
         public DbSet<Notification> Notifications { get; set; }
-        public DbSet<OfflineMessage> OfflineMessages { get; set; }
+        public DbSet<ChatMessage> ChatMessages { get; set; }
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
         {
             ChangeTracker.LazyLoadingEnabled = true;
@@ -75,6 +75,13 @@ namespace techmeet_api.Data
                 .WithMany(e => e.Notifications)
                 .HasForeignKey(n => n.EventId)
                 .OnDelete(DeleteBehavior.NoAction);
+
+            // // Define relationships between User and ChatMessage
+            // builder.Entity<ChatMessage>()
+            //     .HasOne(c => c.Receiver)
+            //     .WithMany(u => u.ChatMessages)
+            //     .HasForeignKey(c => c.ReceiverId)
+            //     .OnDelete(DeleteBehavior.NoAction);
 
             // Seed data for the Category table
             builder.Entity<Category>().HasData(

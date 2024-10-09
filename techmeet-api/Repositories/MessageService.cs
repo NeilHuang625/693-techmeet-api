@@ -7,7 +7,7 @@ namespace techmeet_api.Repositories
 
     public interface IMessageService
     {
-        Task SaveOfflineMessage(string senderId, string receiverId, string message);
+        Task SaveMessage(string senderId, string receiverId, string content);
     }
 
     public class MessageService : IMessageService
@@ -19,18 +19,18 @@ namespace techmeet_api.Repositories
             _context = context;
         }
 
-        public async Task SaveOfflineMessage(string senderId, string receiverId, string message)
+        public async Task SaveMessage(string senderId, string receiverId, string content)
         {
-            var offlineMessage = new OfflineMessage
+            var newMessage = new ChatMessage
             {
                 SenderId = senderId,
                 ReceiverId = receiverId,
-                Message = message,
+                Content = content,
                 CreatedAt = DateTime.UtcNow,
                 IsRead = false
             };
 
-            _context.OfflineMessages.Add(offlineMessage);
+            _context.ChatMessages.Add(newMessage);
             await _context.SaveChangesAsync();
         }
     }

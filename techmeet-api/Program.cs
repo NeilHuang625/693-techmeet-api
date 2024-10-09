@@ -95,6 +95,7 @@ builder.Services.AddSignalR();
 
 // Background tasks
 builder.Services.AddHostedService<NotificationBackgroundService>();
+builder.Services.AddSingleton<NotificationBackgroundService>();
 
 // Add MessageService
 builder.Services.AddScoped<IMessageService, MessageService>();

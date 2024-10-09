@@ -1,7 +1,6 @@
 namespace techmeet_api.BackgroundTasks
 {
     using System;
-    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.EntityFrameworkCore;
@@ -12,7 +11,6 @@ namespace techmeet_api.BackgroundTasks
     using Microsoft.Extensions.Logging;
     using Microsoft.AspNetCore.SignalR;
     using techmeet_api.Hubs;
-
 
     public class NotificationBackgroundService : BackgroundService
     {
@@ -38,7 +36,7 @@ namespace techmeet_api.BackgroundTasks
                     await GenerateNotificationsAsync(context);
                 }
 
-                await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);
+                await Task.Delay(TimeSpan.FromSeconds(20), stoppingToken);
             }
         }
 
@@ -130,6 +128,47 @@ namespace techmeet_api.BackgroundTasks
                                 CreatedAt = notification.CreatedAt
                             });
                         }
+                    }
+                }
+            }
+        }
+
+        // Call this metthod after a user has attended an event
+        public async Task GenerateNotificationForUserAsync(string userId, int eventId)
+        {
+            using (var scope = _serviceScopeFactory.CreateScope())
+            {
+                var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                var user = await context.Users.Include(u => u.Attendances).ThenInclude(a => a.Event).FirstOrDefaultAsync(u => u.Id == userId);
+                if (user != null)
+                {
+                    var attendance = user.Attendances.FirstOrDefault(a => a.EventId == eventId);
+                    if (attendance != null && attendance.Event != null && attendance.Event.StartTime <= DateTime.UtcNow.AddHours(3))
+                    {
+                        var notification = new Notification
+                        {
+                            UserId = userId,
+                            EventId = eventId,
+                            Message = $"\"{attendance.Event.Title}\" is starting in 3 hours!",
+                            Type = "event_upcoming",
+                            CreatedAt = DateTime.UtcNow,
+                            IsRead = false
+                        };
+
+                        context.Notifications.Add(notification);
+                        await context.SaveChangesAsync();
+
+                        context.Entry(notification).Reload();
+
+                        await _hubContext.Clients.User(user.Id).SendAsync("ReceiveNotification", new NotificationSendObject
+                        {
+                            Id = notification.Id,
+                            UserId = notification.UserId,
+                            Message = notification.Message,
+                            Type = notification.Type,
+                            IsRead = notification.IsRead,
+                            CreatedAt = notification.CreatedAt
+                        });
                     }
                 }
             }

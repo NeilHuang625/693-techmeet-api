@@ -231,6 +231,39 @@ namespace techmeet_api.Migrations
                         });
                 });
 
+            modelBuilder.Entity("techmeet_api.Models.ChatMessage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("ReceiverId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("SenderId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReceiverId");
+
+                    b.ToTable("ChatMessages");
+                });
+
             modelBuilder.Entity("techmeet_api.Models.Event", b =>
                 {
                     b.Property<int>("Id")
@@ -325,37 +358,6 @@ namespace techmeet_api.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("Notifications");
-                });
-
-            modelBuilder.Entity("techmeet_api.Models.OfflineMessage", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsRead")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Message")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ReceiverId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("SenderId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("OfflineMessages");
                 });
 
             modelBuilder.Entity("techmeet_api.Models.RevokedToken", b =>
@@ -537,6 +539,17 @@ namespace techmeet_api.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("techmeet_api.Models.ChatMessage", b =>
+                {
+                    b.HasOne("techmeet_api.Models.User", "Receiver")
+                        .WithMany("ChatMessages")
+                        .HasForeignKey("ReceiverId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Receiver");
+                });
+
             modelBuilder.Entity("techmeet_api.Models.Event", b =>
                 {
                     b.HasOne("techmeet_api.Models.Category", "Category")
@@ -610,6 +623,8 @@ namespace techmeet_api.Migrations
             modelBuilder.Entity("techmeet_api.Models.User", b =>
                 {
                     b.Navigation("Attendances");
+
+                    b.Navigation("ChatMessages");
 
                     b.Navigation("Events");
 

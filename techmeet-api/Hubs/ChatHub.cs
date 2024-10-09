@@ -36,20 +36,9 @@ namespace techmeet_api.Hubs
 
         public async Task SendMessageToUser(string userId, string message)
         {
-            if (IsUserConnected(userId))
-            {
-                await Clients.User(userId).SendAsync("ReceiveMessage", message);
-            }
-            else
-            {
-                // Save message to DB and send it to user
-                await _messageService.SaveOfflineMessage(Context.UserIdentifier, userId, message);
-            }
-        }
-
-        private bool IsUserConnected(string userId)
-        {
-            return _connectedUsers.ContainsKey(userId); // Check if user is connected to Hub
+            await Clients.User(userId).SendAsync("ReceiveMessage", message);
+            // Save chat records to DB 
+            await _messageService.SaveMessage(Context.UserIdentifier, userId, message);
         }
     }
 }

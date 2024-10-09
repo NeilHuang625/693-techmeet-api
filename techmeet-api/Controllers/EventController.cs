@@ -6,6 +6,7 @@ using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
+using techmeet_api.BackgroundTasks;
 
 namespace techmeet_api.Controllers
 {
@@ -15,11 +16,13 @@ namespace techmeet_api.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly IConfiguration _configuration;
+        private readonly NotificationBackgroundService _notificationService;
 
-        public EventController(ApplicationDbContext context, IConfiguration configuration)
+        public EventController(ApplicationDbContext context, IConfiguration configuration, NotificationBackgroundService notificationService)
         {
             _context = context;
             _configuration = configuration;
+            _notificationService = notificationService;
         }
         // Define a Data Transfer Object (DTO) for receiving data from the front end
         public class EventDTO
@@ -145,6 +148,9 @@ namespace techmeet_api.Controllers
             @event.CurrentAttendees++;
             await _context.SaveChangesAsync();
 
+            // Call the NotificationBackgroundService
+            await _notificationService.GenerateNotificationForUserAsync(userId, EventId);
+
             return Ok(new { CurrentAttendees = @event.CurrentAttendees });
         }
 
@@ -182,6 +188,12 @@ namespace techmeet_api.Controllers
                 @event.CurrentAttendees++;
             }
 
+            // Find and remove the notification related to this event and user
+            var notification = await _context.Notifications.FirstOrDefaultAsync(n => n.UserId == userId && n.EventId == EventId);
+            if (notification != null)
+            {
+                _context.Notifications.Remove(notification);
+            }
 
             await _context.SaveChangesAsync();
 
