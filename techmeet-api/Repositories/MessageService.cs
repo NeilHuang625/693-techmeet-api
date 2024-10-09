@@ -18,7 +18,7 @@ namespace techmeet_api.Repositories
     }
     public interface IMessageService
     {
-        Task<ChatMessage> SaveMessage(string senderId, string receiverId, string content);
+        Task<ChatMessageDTO> SaveMessage(string senderId, string receiverId, string content);
 
         Task<IEnumerable<ChatMessageDTO>> GetMessagesForUser(string userId);
     }
@@ -32,7 +32,7 @@ namespace techmeet_api.Repositories
             _context = context;
         }
 
-        public async Task<ChatMessage> SaveMessage(string senderId, string receiverId, string content)
+        public async Task<ChatMessageDTO> SaveMessage(string senderId, string receiverId, string content)
         {
             var newMessage = new ChatMessage
             {
@@ -46,12 +46,24 @@ namespace techmeet_api.Repositories
             _context.ChatMessages.Add(newMessage);
             await _context.SaveChangesAsync();
 
-            return newMessage;
+            _context.Entry(newMessage).Reference(c => c.Receiver).Load();
+
+            var messageDTO = new ChatMessageDTO
+            {
+                Id = newMessage.Id,
+                Content = newMessage.Content,
+                CreatedAt = newMessage.CreatedAt,
+                IsRead = newMessage.IsRead,
+                ReceiverId = newMessage.Receiver.Id,
+                ReceiverNickname = newMessage.Receiver.Nickname
+            };
+
+            return messageDTO;
         }
 
         public async Task<IEnumerable<ChatMessageDTO>> GetMessagesForUser(string userId)
         {
-            var messages = await _context.ChatMessages.Where(c => c.SenderId == userId).Select(c => new ChatMessageDTO
+            var messages = await _context.ChatMessages.Where(c => c.SenderId == userId || c.ReceiverId == userId).Select(c => new ChatMessageDTO
             {
                 Id = c.Id,
                 Content = c.Content,

@@ -32,13 +32,13 @@ namespace techmeet_api.Hubs
             _messageService = messageService;
         }
 
-        public async Task SendMessageToUser(string userId, string message)
+        public async Task SendMessageToUser(string receiverId, string message) // "SendMessageToUser" method called from frontend
         {
             var senderId = Context.UserIdentifier;
             if (senderId == null) return;
             // Save chat records to DB 
-            var newMessage = await _messageService.SaveMessage(senderId, userId, message);
-            await Clients.User(userId).SendAsync("ReceiveMessage", newMessage);
+            var newMessage = await _messageService.SaveMessage(senderId, receiverId, message);
+            await Clients.User(receiverId).SendAsync("ReceiveMessage", newMessage);
         }
     }
 }
