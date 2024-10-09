@@ -18,12 +18,12 @@ namespace techmeet_api.Controllers
         }
 
         [Authorize]
-        [HttpGet]
-        public async Task<IActionResult> GetMessagesForUser()
+        [HttpGet("{receiverId}")]
+        public async Task<IActionResult> GetMessagesForUser(string receiverId)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userId == null) return Unauthorized();
-            var messages = await _messageService.GetMessagesForUser(userId);
+            var messages = await _messageService.GetMessagesForUser(userId, receiverId);
             return Ok(messages);
         }
     }

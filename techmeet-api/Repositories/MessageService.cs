@@ -7,6 +7,7 @@ namespace techmeet_api.Repositories
     using Microsoft.EntityFrameworkCore;
     using System.Collections.Generic;
     using System.Linq;
+
     public class ChatMessageDTO
     {
         public int Id { get; set; }
@@ -20,13 +21,12 @@ namespace techmeet_api.Repositories
     {
         Task<ChatMessageDTO> SaveMessage(string senderId, string receiverId, string content);
 
-        Task<IEnumerable<ChatMessageDTO>> GetMessagesForUser(string userId);
+        Task<IEnumerable<ChatMessageDTO>> GetMessagesForUser(string userId, string receiverId);
     }
 
     public class MessageService : IMessageService
     {
         private readonly ApplicationDbContext _context;
-
         public MessageService(ApplicationDbContext context)
         {
             _context = context;
@@ -61,17 +61,22 @@ namespace techmeet_api.Repositories
             return messageDTO;
         }
 
-        public async Task<IEnumerable<ChatMessageDTO>> GetMessagesForUser(string userId)
+        public async Task<IEnumerable<ChatMessageDTO>> GetMessagesForUser(string userId, string receiverId)
         {
-            var messages = await _context.ChatMessages.Where(c => c.SenderId == userId || c.ReceiverId == userId).Select(c => new ChatMessageDTO
-            {
-                Id = c.Id,
-                Content = c.Content,
-                CreatedAt = c.CreatedAt,
-                IsRead = c.IsRead,
-                ReceiverId = c.Receiver.Id,
-                ReceiverNickname = c.Receiver.Nickname
-            }).ToListAsync();
+            Console.WriteLine(userId);
+            var messages = await _context.ChatMessages
+                .Include(c => c.Receiver)
+                .Where(c => (c.SenderId == userId && c.ReceiverId == receiverId) || (c.SenderId == receiverId && c.ReceiverId == userId))
+                .Select(c => new ChatMessageDTO
+                {
+                    Id = c.Id,
+                    Content = c.Content,
+                    CreatedAt = c.CreatedAt,
+                    IsRead = c.IsRead,
+                    ReceiverId = c.Receiver.Id,
+                    ReceiverNickname = c.Receiver.Nickname
+                })
+                .ToListAsync();
             return messages;
         }
     }
