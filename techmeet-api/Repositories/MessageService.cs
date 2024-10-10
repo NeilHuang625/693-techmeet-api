@@ -17,6 +17,7 @@ namespace techmeet_api.Repositories
         public string? ReceiverId { get; set; }
         public string? SenderId { get; set; }
         public string? ReceiverNickname { get; set; }
+        public string? SenderNickname { get; set; }
     }
     public interface IMessageService
     {
@@ -48,6 +49,7 @@ namespace techmeet_api.Repositories
             await _context.SaveChangesAsync();
 
             _context.Entry(newMessage).Reference(c => c.Receiver).Load();
+            _context.Entry(newMessage).Reference(c => c.Sender).Load();
 
             var messageDTO = new ChatMessageDTO
             {
@@ -57,7 +59,8 @@ namespace techmeet_api.Repositories
                 IsRead = newMessage.IsRead,
                 SenderId = newMessage.SenderId,
                 ReceiverId = newMessage.Receiver.Id,
-                ReceiverNickname = newMessage.Receiver.Nickname
+                ReceiverNickname = newMessage.Receiver.Nickname,
+                SenderNickname = newMessage.Sender.Nickname
             };
 
             return messageDTO;
@@ -65,10 +68,9 @@ namespace techmeet_api.Repositories
 
         public async Task<IEnumerable<ChatMessageDTO>> GetMessagesForUser(string userId, string receiverId)
         {
-            Console.WriteLine(userId);
             var messages = await _context.ChatMessages
                 .Include(c => c.Receiver)
-                // .Where(c => (c.SenderId == userId && c.ReceiverId == receiverId) || (c.SenderId == receiverId && c.ReceiverId == userId))
+                .Include(c => c.Sender)
                 .Where(c => c.SenderId == userId || c.ReceiverId == userId)
                 .Select(c => new ChatMessageDTO
                 {
@@ -78,7 +80,8 @@ namespace techmeet_api.Repositories
                     IsRead = c.IsRead,
                     SenderId = c.SenderId,
                     ReceiverId = c.Receiver.Id,
-                    ReceiverNickname = c.Receiver.Nickname
+                    ReceiverNickname = c.Receiver.Nickname,
+                    SenderNickname = c.Sender.Nickname
                 })
                 .ToListAsync();
             return messages;
