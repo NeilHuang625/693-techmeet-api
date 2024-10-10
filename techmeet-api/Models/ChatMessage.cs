@@ -10,6 +10,7 @@ namespace techmeet_api.Models
         public bool IsRead { get; set; }
 
         public User Receiver { get; set; }
+        public User Sender { get; set; }
 
     }
 }

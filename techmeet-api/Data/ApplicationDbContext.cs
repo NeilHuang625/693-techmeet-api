@@ -76,12 +76,18 @@ namespace techmeet_api.Data
                 .HasForeignKey(n => n.EventId)
                 .OnDelete(DeleteBehavior.NoAction);
 
-            // // Define relationships between User and ChatMessage
-            // builder.Entity<ChatMessage>()
-            //     .HasOne(c => c.Receiver)
-            //     .WithMany(u => u.ChatMessages)
-            //     .HasForeignKey(c => c.ReceiverId)
-            //     .OnDelete(DeleteBehavior.NoAction);
+            // Define relationships between User and ChatMessage
+            builder.Entity<ChatMessage>()
+                .HasOne(c => c.Receiver)
+                .WithMany(u => u.MessagesReceived)
+                .HasForeignKey(c => c.ReceiverId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<ChatMessage>()
+                .HasOne(c => c.Sender)
+                .WithMany(u => u.MessagesSent)
+                .HasForeignKey(c => c.SenderId)
+                .OnDelete(DeleteBehavior.NoAction);
 
             // Seed data for the Category table
             builder.Entity<Category>().HasData(

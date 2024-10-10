@@ -15,6 +15,7 @@ namespace techmeet_api.Repositories
         public DateTime CreatedAt { get; set; }
         public bool IsRead { get; set; }
         public string? ReceiverId { get; set; }
+        public string? SenderId { get; set; }
         public string? ReceiverNickname { get; set; }
     }
     public interface IMessageService
@@ -54,6 +55,7 @@ namespace techmeet_api.Repositories
                 Content = newMessage.Content,
                 CreatedAt = newMessage.CreatedAt,
                 IsRead = newMessage.IsRead,
+                SenderId = newMessage.SenderId,
                 ReceiverId = newMessage.Receiver.Id,
                 ReceiverNickname = newMessage.Receiver.Nickname
             };
@@ -66,13 +68,15 @@ namespace techmeet_api.Repositories
             Console.WriteLine(userId);
             var messages = await _context.ChatMessages
                 .Include(c => c.Receiver)
-                .Where(c => (c.SenderId == userId && c.ReceiverId == receiverId) || (c.SenderId == receiverId && c.ReceiverId == userId))
+                // .Where(c => (c.SenderId == userId && c.ReceiverId == receiverId) || (c.SenderId == receiverId && c.ReceiverId == userId))
+                .Where(c => c.SenderId == userId || c.ReceiverId == userId)
                 .Select(c => new ChatMessageDTO
                 {
                     Id = c.Id,
                     Content = c.Content,
                     CreatedAt = c.CreatedAt,
                     IsRead = c.IsRead,
+                    SenderId = c.SenderId,
                     ReceiverId = c.Receiver.Id,
                     ReceiverNickname = c.Receiver.Nickname
                 })

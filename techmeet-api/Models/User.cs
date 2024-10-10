@@ -12,6 +12,8 @@ namespace techmeet_api.Models
         public virtual ICollection<Attendance> Attendances { get; set; }
         public virtual ICollection<Waitlist> Waitlists { get; set; }
         public virtual ICollection<Notification> Notifications { get; set; }
-        public virtual ICollection<ChatMessage> ChatMessages { get; set; }
+        public virtual ICollection<ChatMessage> MessagesSent { get; set; }
+        public virtual ICollection<ChatMessage> MessagesReceived { get; set; }
+
     }
 }
