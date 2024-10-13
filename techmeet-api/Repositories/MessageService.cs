@@ -7,6 +7,7 @@ namespace techmeet_api.Repositories
     using Microsoft.EntityFrameworkCore;
     using System.Collections.Generic;
     using System.Linq;
+    using Microsoft.AspNetCore.Http.HttpResults;
 
     public class ChatMessageDTO
     {
@@ -24,6 +25,7 @@ namespace techmeet_api.Repositories
         Task<ChatMessageDTO> SaveMessage(string senderId, string receiverId, string content);
 
         Task<IEnumerable<ChatMessageDTO>> GetMessagesForUser(string userId, string receiverId);
+        Task MarkMessagesAsRead(string userId, string receiverId);
     }
 
     public class MessageService : IMessageService
@@ -85,6 +87,21 @@ namespace techmeet_api.Repositories
                 })
                 .ToListAsync();
             return messages;
+        }
+
+        // Mark messages as read
+        public async Task MarkMessagesAsRead(string userId, string receiverId)
+        {
+            var messages = await _context.ChatMessages
+                .Where(c => c.SenderId == receiverId && c.ReceiverId == userId && c.IsRead == false)
+                .ToListAsync();
+
+            foreach (var message in messages)
+            {
+                message.IsRead = true;
+            }
+
+            await _context.SaveChangesAsync();
         }
     }
 }

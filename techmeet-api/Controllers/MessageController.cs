@@ -26,5 +26,15 @@ namespace techmeet_api.Controllers
             var messages = await _messageService.GetMessagesForUser(userId, receiverId);
             return Ok(messages);
         }
+
+        [Authorize]
+        [HttpPut("{receiverId}")]
+        public async Task<IActionResult> MarkMessagesAsRead(string receiverId)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null) return Unauthorized();
+            await _messageService.MarkMessagesAsRead(userId, receiverId);
+            return Ok();
+        }
     }
 }

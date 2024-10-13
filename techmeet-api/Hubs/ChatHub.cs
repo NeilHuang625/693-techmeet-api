@@ -39,6 +39,7 @@ namespace techmeet_api.Hubs
             // Save chat records to DB 
             var newMessage = await _messageService.SaveMessage(senderId, receiverId, message);
             await Clients.User(receiverId).SendAsync("ReceiveMessage", newMessage);
+            await Clients.User(senderId).SendAsync("ReceiveMessage", newMessage);
         }
     }
 }
