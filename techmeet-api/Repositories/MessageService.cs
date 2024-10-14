@@ -26,6 +26,7 @@ namespace techmeet_api.Repositories
 
         Task<IEnumerable<ChatMessageDTO>> GetMessagesForUser(string userId, string receiverId);
         Task MarkMessagesAsRead(string userId, string receiverId);
+        Task<IEnumerable<ChatMessageDTO>> GetAllMessages(string userId);
     }
 
     public class MessageService : IMessageService
@@ -66,6 +67,28 @@ namespace techmeet_api.Repositories
             };
 
             return messageDTO;
+        }
+
+        // Get all messages
+        public async Task<IEnumerable<ChatMessageDTO>> GetAllMessages(string userId)
+        {
+            var messages = await _context.ChatMessages
+                .Include(c => c.Receiver)
+                .Include(c => c.Sender)
+                .Where(c => c.SenderId == userId || c.ReceiverId == userId)
+                .Select(c => new ChatMessageDTO
+                {
+                    Id = c.Id,
+                    Content = c.Content,
+                    CreatedAt = c.CreatedAt,
+                    IsRead = c.IsRead,
+                    SenderId = c.SenderId,
+                    ReceiverId = c.Receiver.Id,
+                    ReceiverNickname = c.Receiver.Nickname,
+                    SenderNickname = c.Sender.Nickname
+                })
+                .ToListAsync();
+            return messages;
         }
 
         public async Task<IEnumerable<ChatMessageDTO>> GetMessagesForUser(string userId, string receiverId)
