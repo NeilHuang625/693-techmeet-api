@@ -7,6 +7,8 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using techmeet_api.Data;
 using Microsoft.AspNetCore.Authorization;
+using Azure.Storage.Blobs;
+
 
 namespace techmeet_api.Controllers
 {
@@ -28,8 +30,14 @@ namespace techmeet_api.Controllers
         }
 
         [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] RegisterModel model)
+        public async Task<IActionResult> Register(IFormFile imageFile)
         {
+            var model = new RegisterModel
+            {
+                Email = Request.Form["email"],
+                Password = Request.Form["password"],
+                Nickname = Request.Form["nickname"]
+            };
             // Check if the email has been used
             var userExists = await _userManager.FindByEmailAsync(model.Email);
             if (userExists != null)
@@ -44,6 +52,23 @@ namespace techmeet_api.Controllers
                 Nickname = model.Nickname
             };
 
+            // Create a blob service client to interact with the Azure blob storage
+            var blobServiceClient = new BlobServiceClient(_configuration["BLOB_STORAGE_CONNECTION_STRING"]);
+            var containerClient = blobServiceClient.GetBlobContainerClient("uploads"); // Create a container called "uploads"
+            await containerClient.CreateIfNotExistsAsync(); // Create the container if it doesn't exist
+            // Generate a unique file name for the image
+            var uniqueFileName = Guid.NewGuid().ToString() + "_" + imageFile.FileName;
+            // Create a blob client for the image file
+            var blobClient = containerClient.GetBlobClient(uniqueFileName);
+
+            // Upload the image to the Azure blob storage
+            using (var stream = imageFile.OpenReadStream())
+            {
+                await blobClient.UploadAsync(stream, overwrite: true);
+            }
+
+            user.ProfilePhotoUrl = blobClient.Uri.AbsoluteUri;
+
             var result = await _userManager.CreateAsync(user, model.Password);
 
             if (result.Succeeded)
@@ -52,10 +77,13 @@ namespace techmeet_api.Controllers
                 await _userManager.AddToRoleAsync(user, "user");
                 await _signInManager.SignInAsync(user, false);
 
-                return Ok(new { User = new { Id = user.Id, Email = user.Email, Nickname = user.Nickname, Roles = "user" }, Token = GenerateJwtToken(model.Email, user) });
+                return Ok(new { User = new { Id = user.Id, Email = user.Email, Nickname = user.Nickname, Roles = "user", ImgUrl = user.ProfilePhotoUrl }, Token = GenerateJwtToken(model.Email, user) });
+            }
+            else
+            {
+                return BadRequest("Invalid registration");
             }
 
-            return BadRequest("Invalid registration");
         }
 
         private bool IsJwtRevoked(string jwt)
@@ -80,7 +108,7 @@ namespace techmeet_api.Controllers
                 {
                     roles = await _userManager.GetRolesAsync(user);
                 }
-                return Ok(new { User = new { Id = user.Id, Email = user.Email, Nickname = user.Nickname, Roles = roles }, Token = GenerateJwtToken(model.Email, user) });
+                return Ok(new { User = new { Id = user.Id, Email = user.Email, Nickname = user.Nickname, Roles = roles, ImgUrl = user.ProfilePhotoUrl }, Token = GenerateJwtToken(model.Email, user) });
             }
 
             return BadRequest("Invalid login attempt");
@@ -190,6 +218,7 @@ namespace techmeet_api.Controllers
                 userClaims.Add(new Claim(ClaimTypes.NameIdentifier, user.Id));
                 // Add the user's nickname to the claims
                 userClaims.Add(new Claim(ClaimTypes.GivenName, user.Nickname ?? string.Empty));
+                userClaims.Add(new Claim("ProfilePhotoUrl", user.ProfilePhotoUrl ?? string.Empty));
             }
             var roles = await _userManager.GetRolesAsync(user);
 
@@ -213,6 +242,18 @@ namespace techmeet_api.Controllers
                 signingCredentials: creds);
 
             return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
+        [Authorize]
+        [HttpGet("{userId}")]
+        public async Task<IActionResult> GetUserInfo(string userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return NotFound();
+            }
+            return Ok(new { Id = user.Id, Email = user.Email, Nickname = user.Nickname, Roles = await _userManager.GetRolesAsync(user), ImgUrl = user.ProfilePhotoUrl });
         }
     }
 }

@@ -19,6 +19,8 @@ namespace techmeet_api.Repositories
         public string? SenderId { get; set; }
         public string? ReceiverNickname { get; set; }
         public string? SenderNickname { get; set; }
+        public string? ReceiverImageUrl { get; set; }
+        public string? SenderImageUrl { get; set; }
     }
     public interface IMessageService
     {
@@ -63,7 +65,9 @@ namespace techmeet_api.Repositories
                 SenderId = newMessage.SenderId,
                 ReceiverId = newMessage.Receiver.Id,
                 ReceiverNickname = newMessage.Receiver.Nickname,
-                SenderNickname = newMessage.Sender.Nickname
+                SenderNickname = newMessage.Sender.Nickname,
+                ReceiverImageUrl = newMessage.Receiver.ProfilePhotoUrl,
+                SenderImageUrl = newMessage.Sender.ProfilePhotoUrl
             };
 
             return messageDTO;
@@ -85,7 +89,9 @@ namespace techmeet_api.Repositories
                     SenderId = c.SenderId,
                     ReceiverId = c.Receiver.Id,
                     ReceiverNickname = c.Receiver.Nickname,
-                    SenderNickname = c.Sender.Nickname
+                    SenderNickname = c.Sender.Nickname,
+                    ReceiverImageUrl = c.Receiver.ProfilePhotoUrl,
+                    SenderImageUrl = c.Sender.ProfilePhotoUrl
                 })
                 .ToListAsync();
             return messages;
@@ -106,7 +112,9 @@ namespace techmeet_api.Repositories
                     SenderId = c.SenderId,
                     ReceiverId = c.Receiver.Id,
                     ReceiverNickname = c.Receiver.Nickname,
-                    SenderNickname = c.Sender.Nickname
+                    SenderNickname = c.Sender.Nickname,
+                    ReceiverImageUrl = c.Receiver.ProfilePhotoUrl,
+                    SenderImageUrl = c.Sender.ProfilePhotoUrl
                 })
                 .ToListAsync();
             return messages;

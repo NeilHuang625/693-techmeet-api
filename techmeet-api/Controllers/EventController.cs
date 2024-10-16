@@ -101,7 +101,8 @@ namespace techmeet_api.Controllers
                 e.UserId,
                 e.CategoryId,
                 Category = e.Category.Name,
-                User = e.User.Nickname
+                User = e.User.Nickname,
+                ProfileImageUrl = e.User.ProfilePhotoUrl
             }).ToListAsync();
 
             return Ok(events);

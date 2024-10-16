@@ -6,6 +6,7 @@ namespace techmeet_api.Models
     {
         public string? Nickname { get; set; }
         public DateTime? VIPExpirationDate { get; set; }
+        public string? ProfilePhotoUrl { get; set; }
 
         // add a navigation property to the Event class
         public virtual ICollection<Event> Events { get; set; }
