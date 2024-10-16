@@ -60,7 +60,7 @@ namespace techmeet_api.Controllers
                 CurrentAttendees = 0
             };
             // Create a blob service client to interact with the Azure blob storage
-            var blobServiceClient = new BlobServiceClient(_configuration["BLOB_STORAGE_CONNECTION_STRING"]);
+            var blobServiceClient = new BlobServiceClient(_configuration["BLOB_STORAGE_CONNECTION_STRING"]); // for local development
             var containerClient = blobServiceClient.GetBlobContainerClient("uploads"); // Create a container called "uploads"
             await containerClient.CreateIfNotExistsAsync(); // Create the container if it doesn't exist
             // Generate a unique file name for the image
