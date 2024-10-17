@@ -11,6 +11,24 @@ using techmeet_api.Middlewares;
 using System.Text.Json;
 using techmeet_api.BackgroundTasks;
 using techmeet_api.Hubs;
+using Microsoft.Data.SqlClient;
+
+
+static void TestDatabaseConnection(string connectionString)
+{
+    try
+    {
+        using (var connection = new SqlConnection(connectionString))
+        {
+            connection.Open();
+            Console.WriteLine("Connection successful");
+        }
+    }
+    catch (SqlException ex)
+    {
+        Console.WriteLine("Connection failed: " + ex.Message);
+    }
+}
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -36,6 +54,17 @@ builder.Services.AddControllersWithViews();
 
 // Set up the database connection
 // var connectionString = builder.Configuration["ConnectionString"];
+
+// TestDatabaseConnection(connectionString);
+string? connectionString = builder.Configuration.GetConnectionString("ConnectionString");
+if (connectionString != null)
+{
+    TestDatabaseConnection(connectionString);
+}
+else
+{
+    Console.WriteLine("Connection string is null");
+}
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
