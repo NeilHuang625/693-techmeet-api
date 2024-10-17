@@ -159,11 +159,16 @@ async Task EnsureRolesAsync(RoleManager<IdentityRole> roleManager)
     }
 }
 
-// Make sure the default admin user exitst and if not, create it
 async Task EnsureDefaultAdminAsync(UserManager<User> userManager)
 {
     var adminEmail = builder.Configuration["AdminEmail"];
     var adminPassword = builder.Configuration["AdminPassword"];
+
+    if (string.IsNullOrEmpty(adminEmail) || string.IsNullOrEmpty(adminPassword))
+    {
+        throw new Exception("Admin email or password is not set in the configuration");
+    }
+
     var adminUser = await userManager.FindByEmailAsync(adminEmail);
     if (adminUser == null)
     {
@@ -176,7 +181,6 @@ async Task EnsureDefaultAdminAsync(UserManager<User> userManager)
             {
                 throw new Exception($"Could not add user {newAdminUser.Email} to role admin");
             }
-
         }
     }
 }

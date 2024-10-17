@@ -63,11 +63,11 @@ namespace techmeet_api.Repositories
                 CreatedAt = newMessage.CreatedAt,
                 IsRead = newMessage.IsRead,
                 SenderId = newMessage.SenderId,
-                ReceiverId = newMessage.Receiver.Id,
-                ReceiverNickname = newMessage.Receiver.Nickname,
-                SenderNickname = newMessage.Sender.Nickname,
-                ReceiverImageUrl = newMessage.Receiver.ProfilePhotoUrl,
-                SenderImageUrl = newMessage.Sender.ProfilePhotoUrl
+                ReceiverId = newMessage.Receiver?.Id,
+                ReceiverNickname = newMessage.Receiver?.Nickname,
+                SenderNickname = newMessage.Sender?.Nickname,
+                ReceiverImageUrl = newMessage.Receiver?.ProfilePhotoUrl,
+                SenderImageUrl = newMessage.Sender?.ProfilePhotoUrl
             };
 
             return messageDTO;
@@ -87,11 +87,11 @@ namespace techmeet_api.Repositories
                     CreatedAt = c.CreatedAt,
                     IsRead = c.IsRead,
                     SenderId = c.SenderId,
-                    ReceiverId = c.Receiver.Id,
-                    ReceiverNickname = c.Receiver.Nickname,
-                    SenderNickname = c.Sender.Nickname,
-                    ReceiverImageUrl = c.Receiver.ProfilePhotoUrl,
-                    SenderImageUrl = c.Sender.ProfilePhotoUrl
+                    ReceiverId = c.Receiver == null ? null : c.Receiver.Id,
+                    ReceiverNickname = c.Receiver == null ? null : c.Receiver.Nickname,
+                    SenderNickname = c.Sender == null ? null : c.Sender.Nickname,
+                    ReceiverImageUrl = c.Receiver == null ? null : c.Receiver.ProfilePhotoUrl,
+                    SenderImageUrl = c.Sender == null ? null : c.Sender.ProfilePhotoUrl
                 })
                 .ToListAsync();
             return messages;
@@ -110,11 +110,11 @@ namespace techmeet_api.Repositories
                     CreatedAt = c.CreatedAt,
                     IsRead = c.IsRead,
                     SenderId = c.SenderId,
-                    ReceiverId = c.Receiver.Id,
-                    ReceiverNickname = c.Receiver.Nickname,
-                    SenderNickname = c.Sender.Nickname,
-                    ReceiverImageUrl = c.Receiver.ProfilePhotoUrl,
-                    SenderImageUrl = c.Sender.ProfilePhotoUrl
+                    ReceiverId = c.Receiver == null ? null : c.Receiver.Id,
+                    ReceiverNickname = c.Receiver == null ? null : c.Receiver.Nickname,
+                    SenderNickname = c.Sender == null ? null : c.Sender.Nickname,
+                    ReceiverImageUrl = c.Receiver == null ? null : c.Receiver.ProfilePhotoUrl,
+                    SenderImageUrl = c.Sender == null ? null : c.Sender.ProfilePhotoUrl
                 })
                 .ToListAsync();
             return messages;

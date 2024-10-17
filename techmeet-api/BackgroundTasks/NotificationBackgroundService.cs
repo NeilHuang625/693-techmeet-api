@@ -43,9 +43,9 @@ namespace techmeet_api.BackgroundTasks
         public class NotificationSendObject
         {
             public int Id { get; set; }
-            public string UserId { get; set; }
-            public string Message { get; set; }
-            public string Type { get; set; }
+            public string? UserId { get; set; }
+            public string? Message { get; set; }
+            public string? Type { get; set; }
             public bool IsRead { get; set; }
             public DateTime CreatedAt { get; set; }
         }
@@ -53,6 +53,8 @@ namespace techmeet_api.BackgroundTasks
         private async Task GenerateNotificationsAsync(ApplicationDbContext context)
         {
             var users = await context.Users.Include(u => u.Attendances).Include(a => a.Events).ToListAsync();
+
+            if (users == null) return;
 
             foreach (var user in users)
             {
@@ -91,6 +93,8 @@ namespace techmeet_api.BackgroundTasks
                         });
                     }
                 }
+
+                if (user.Attendances == null) continue;
 
                 foreach (var attendance in user.Attendances)
                 {
@@ -140,7 +144,7 @@ namespace techmeet_api.BackgroundTasks
             {
                 var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
                 var user = await context.Users.Include(u => u.Attendances).ThenInclude(a => a.Event).FirstOrDefaultAsync(u => u.Id == userId);
-                if (user != null)
+                if (user != null && user.Attendances != null)
                 {
                     var attendance = user.Attendances.FirstOrDefault(a => a.EventId == eventId);
                     if (attendance != null && attendance.Event != null && attendance.Event.StartTime <= DateTime.UtcNow.AddHours(3))

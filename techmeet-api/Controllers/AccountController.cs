@@ -34,9 +34,9 @@ namespace techmeet_api.Controllers
         {
             var model = new RegisterModel
             {
-                Email = Request.Form["email"],
-                Password = Request.Form["password"],
-                Nickname = Request.Form["nickname"]
+                Email = Request.Form["email"].ToString(),
+                Password = Request.Form["password"].ToString(),
+                Nickname = Request.Form["nickname"].ToString()
             };
             // Check if the email has been used
             var userExists = await _userManager.FindByEmailAsync(model.Email);
@@ -94,12 +94,13 @@ namespace techmeet_api.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginModel model)
         {
+            if (model.Email == null || model.Password == null) return BadRequest("Invalid login attempt");
             var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, false, false);
 
             if (result.Succeeded)
             {
                 var user = await _userManager.FindByEmailAsync(model.Email);
-                IList<string> roles = null;
+                IList<string>? roles = null;
                 if (user == null)
                 {
                     return BadRequest("Invalid login attempt");
@@ -219,6 +220,10 @@ namespace techmeet_api.Controllers
                 // Add the user's nickname to the claims
                 userClaims.Add(new Claim(ClaimTypes.GivenName, user.Nickname ?? string.Empty));
                 userClaims.Add(new Claim("ProfilePhotoUrl", user.ProfilePhotoUrl ?? string.Empty));
+            }
+            if (user == null)
+            {
+                throw new Exception("User is null");
             }
             var roles = await _userManager.GetRolesAsync(user);
 

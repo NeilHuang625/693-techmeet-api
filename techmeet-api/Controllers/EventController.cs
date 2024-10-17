@@ -27,16 +27,16 @@ namespace techmeet_api.Controllers
         // Define a Data Transfer Object (DTO) for receiving data from the front end
         public class EventDTO
         {
-            public string Title { get; set; }
-            public string Description { get; set; }
-            public string Location { get; set; }
-            public string City { get; set; }
+            public string? Title { get; set; }
+            public string? Description { get; set; }
+            public string? Location { get; set; }
+            public string? City { get; set; }
             public DateTime StartTime { get; set; }
             public DateTime EndTime { get; set; }
-            public IFormFile ImageFile { get; set; }
+            public IFormFile? ImageFile { get; set; }
             public int MaxAttendees { get; set; }
             public bool Promoted { get; set; }
-            public string UserId { get; set; }
+            public string? UserId { get; set; }
             public int CategoryId { get; set; }
         };
 
@@ -44,6 +44,11 @@ namespace techmeet_api.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateEvent([FromForm] EventDTO model)
         {
+            if (model.Title == null || model.Description == null || model.Location == null || model.City == null || model.UserId == null || model.ImageFile == null)
+            {
+                return BadRequest("Missing required fields");
+            }
+
             var newEvent = new Event
             {
                 Title = model.Title,
@@ -100,9 +105,9 @@ namespace techmeet_api.Controllers
                 e.Promoted,
                 e.UserId,
                 e.CategoryId,
-                Category = e.Category.Name,
-                User = e.User.Nickname,
-                ProfileImageUrl = e.User.ProfilePhotoUrl
+                Category = e.Category != null ? e.Category.Name : null,
+                User = e.User != null ? e.User.Nickname : null,
+                ProfileImageUrl = e.User != null ? e.User.ProfilePhotoUrl : null
             }).ToListAsync();
 
             return Ok(events);
@@ -128,7 +133,7 @@ namespace techmeet_api.Controllers
             var user = await _context.Users.FindAsync(userId);
             var @event = await _context.Events.FindAsync(EventId);
 
-            if (@event == null)
+            if (@event == null || userId == null)
             {
                 return NotFound("Event not found");
             }
@@ -163,7 +168,7 @@ namespace techmeet_api.Controllers
             var attendance = await _context.Attendances.FirstOrDefaultAsync(a => a.UserId == userId && a.EventId == EventId);
             var @event = await _context.Events.FindAsync(EventId);
 
-            if (attendance == null)
+            if (attendance == null || @event == null)
             {
                 return NotFound("Attendance not found");
             }
@@ -226,7 +231,7 @@ namespace techmeet_api.Controllers
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var @event = await _context.Events.FindAsync(EventId);
 
-            if (@event == null)
+            if (@event == null || userId == null)
             {
                 return NotFound("Event not found");
             }
@@ -281,10 +286,10 @@ namespace techmeet_api.Controllers
 
         public class UpdatedEventDTO
         {
-            public string Title { get; set; }
-            public string Description { get; set; }
-            public string Location { get; set; }
-            public string City { get; set; }
+            public string? Title { get; set; }
+            public string? Description { get; set; }
+            public string? Location { get; set; }
+            public string? City { get; set; }
             public DateTime StartTime { get; set; }
             public DateTime EndTime { get; set; }
             public IFormFile? ImageFile { get; set; }
@@ -299,7 +304,7 @@ namespace techmeet_api.Controllers
         {
             var @event = await _context.Events.FindAsync(EventId);
 
-            if (@event == null)
+            if (@event == null || model.Title == null || model.Description == null || model.Location == null || model.City == null)
             {
                 return NotFound("Event not found");
             }

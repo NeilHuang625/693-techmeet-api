@@ -16,13 +16,15 @@ namespace techmeet_api.Hubs
         public override async Task OnConnectedAsync()
         {
             var userId = Context.UserIdentifier;
+            if (userId == null) return;
             _connectedUsers.TryAdd(userId, true);
             await base.OnConnectedAsync();
         }
 
-        public override async Task OnDisconnectedAsync(Exception exception)
+        public override async Task OnDisconnectedAsync(Exception? exception)
         {
             var userId = Context.UserIdentifier;
+            if (userId == null) return;
             _connectedUsers.TryRemove(userId, out _);
             await base.OnDisconnectedAsync(exception);
         }
