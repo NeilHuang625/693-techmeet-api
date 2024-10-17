@@ -12,23 +12,7 @@ using System.Text.Json;
 using techmeet_api.BackgroundTasks;
 using techmeet_api.Hubs;
 using Microsoft.Data.SqlClient;
-
-
-static void TestDatabaseConnection(string connectionString)
-{
-    try
-    {
-        using (var connection = new SqlConnection(connectionString))
-        {
-            connection.Open();
-            Console.WriteLine("Connection successful");
-        }
-    }
-    catch (SqlException ex)
-    {
-        Console.WriteLine("Connection failed: " + ex.Message);
-    }
-}
+using Microsoft.EntityFrameworkCore.Migrations.Operations.Builders;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -57,10 +41,6 @@ string? connectionString = builder.Configuration.GetConnectionString("Connection
 if (connectionString != null)
 {
     TestDatabaseConnection(connectionString);
-}
-else
-{
-    Console.WriteLine("Connection string is null");
 }
 
 // Set up the database connection
@@ -139,6 +119,22 @@ builder.Services.AddScoped<IJwtBlacklistService, JwtBlacklistService>();
 
 var app = builder.Build();
 
+// Apply migrations automatically on app startup
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var context = services.GetRequiredService<ApplicationDbContext>();
+        context.Database.Migrate();
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "An error occurred while migrating the database.");
+    }
+}
+
 // Create roles
 using (var scope = app.Services.CreateScope())
 {
@@ -211,5 +207,22 @@ async Task EnsureDefaultAdminAsync(UserManager<User> userManager)
                 throw new Exception($"Could not add user {newAdminUser.Email} to role admin");
             }
         }
+    }
+}
+
+// Test the database connection
+static void TestDatabaseConnection(string connectionString)
+{
+    try
+    {
+        using (var connection = new SqlConnection(connectionString))
+        {
+            connection.Open();
+            Console.WriteLine("Connection successful");
+        }
+    }
+    catch (SqlException ex)
+    {
+        Console.WriteLine("Connection failed: " + ex.Message);
     }
 }
