@@ -25,7 +25,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReactApp", policy =>
     {
-        policy.WithOrigins("http://localhost:5173", "https://main.d37hwvzkpt7c7a.amplifyapp.com")
+        policy.WithOrigins("https://main.d37hwvzkpt7c7a.amplifyapp.com")
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials();
@@ -35,7 +35,7 @@ builder.Services.AddCors(options =>
 builder.Services.AddControllersWithViews();
 
 // Set up the database connection
-var connectionString = builder.Configuration["ConnectionString"];
+// var connectionString = builder.Configuration["ConnectionString"];
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
