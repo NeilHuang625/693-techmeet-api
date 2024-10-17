@@ -25,7 +25,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReactApp", policy =>
     {
-        policy.WithOrigins("http://localhost:5173, https://main.d37hwvzkpt7c7a.amplifyapp.com")
+        policy.WithOrigins("http://localhost:5173", "https://main.d37hwvzkpt7c7a.amplifyapp.com")
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials();
