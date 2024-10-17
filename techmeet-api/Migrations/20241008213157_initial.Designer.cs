@@ -13,7 +13,7 @@ namespace techmeet_api.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
     [Migration("20241008213157_initial")]
-    partial class initial
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

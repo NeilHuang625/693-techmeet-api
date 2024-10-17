@@ -39,8 +39,8 @@ var connectionString = builder.Configuration["ConnectionString"];
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
-    // options.UseSqlServer(connectionString); // for local development
-    options.UseSqlServer(builder.Configuration.GetConnectionString("ConnectionString")); // for deployment
+    options.UseSqlServer(connectionString); // for local development
+    // options.UseSqlServer(builder.Configuration.GetConnectionString("ConnectionString")); // for deployment
 });
 
 // Add Identity services
