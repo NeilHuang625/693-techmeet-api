@@ -14,7 +14,7 @@ namespace techmeet_api.Middlewares
 
         public async Task InvokeAsync(HttpContext context, IJwtBlacklistService jwtBlacklistService)
         {
-            string jwt = GetJwtFromRequest(context.Request);
+            string? jwt = GetJwtFromRequest(context.Request);
 
             if (jwt != null && await jwtBlacklistService.IsTokenBlacklisted(jwt))
             {
@@ -25,9 +25,9 @@ namespace techmeet_api.Middlewares
             await _next(context);
         }
 
-        private string GetJwtFromRequest(HttpRequest request)
+        private string? GetJwtFromRequest(HttpRequest request)
         {
-            string authorization = request.Headers["Authorization"];
+            string? authorization = request.Headers["Authorization"];
             if (authorization != null && authorization.StartsWith("Bearer "))
             {
                 return authorization.Substring("Bearer ".Length);

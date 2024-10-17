@@ -11,8 +11,8 @@ namespace techmeet_api.Hubs
         public class Notification
         {
             public int Id { get; set; }
-            public string Type { get; set; }
-            public string Message { get; set; }
+            public string? Type { get; set; }
+            public string? Message { get; set; }
             public bool IsRead { get; set; }
             public DateTime CreatedAt { get; set; }
 
@@ -20,6 +20,7 @@ namespace techmeet_api.Hubs
         public async Task SendNotification(Notification notification)
         {
             var userId = Context.UserIdentifier;
+            if (userId == null) return;
             await Clients.User(userId).SendAsync("ReceiveNotification", notification);
         }
     }
