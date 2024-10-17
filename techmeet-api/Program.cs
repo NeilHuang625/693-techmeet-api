@@ -52,9 +52,6 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddControllersWithViews();
 
-// Set up the database connection
-// var connectionString = builder.Configuration["ConnectionString"];
-
 // TestDatabaseConnection(connectionString);
 string? connectionString = builder.Configuration.GetConnectionString("ConnectionString");
 if (connectionString != null)
@@ -66,9 +63,12 @@ else
     Console.WriteLine("Connection string is null");
 }
 
+// Set up the database connection
+var connectionStringLocal = builder.Configuration["ConnectionString"];
+
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
-    // options.UseSqlServer(connectionString); // for local development
+    // options.UseSqlServer(connectionStringLocal); // for local development
     options.UseSqlServer(builder.Configuration.GetConnectionString("ConnectionString")); // for deployment
 });
 
