@@ -36,7 +36,7 @@ namespace techmeet_api.BackgroundTasks
                     await GenerateNotificationsAsync(context);
                 }
 
-                await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);
+                await Task.Delay(TimeSpan.FromHours(12), stoppingToken);
             }
         }
 
