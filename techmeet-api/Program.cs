@@ -30,7 +30,8 @@ builder.Services.AddCors(options =>
         policy.WithOrigins("https://main.d37hwvzkpt7c7a.amplifyapp.com")
             .AllowAnyHeader()
             .AllowAnyMethod()
-            .AllowCredentials();
+            .AllowCredentials()
+            .SetIsOriginAllowed((host) => true);
     });
 });
 
