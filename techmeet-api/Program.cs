@@ -12,7 +12,6 @@ using System.Text.Json;
 using techmeet_api.BackgroundTasks;
 using techmeet_api.Hubs;
 using Microsoft.Data.SqlClient;
-using Microsoft.EntityFrameworkCore.Migrations.Operations.Builders;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -45,7 +44,7 @@ if (connectionString != null)
 }
 
 // Set up the database connection
-var connectionStringLocal = builder.Configuration["ConnectionString"];
+// var connectionStringLocal = builder.Configuration["ConnectionString"];
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
